@@ -55,6 +55,7 @@ import (
 	cloudformationtypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	cloudfronttypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	cloudwatchtypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
+	cloudwatchlogstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	ecrtypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	ecstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
@@ -233,6 +234,8 @@ func InitResource(source interface{}) (*graph.Resource, error) {
 		res = graph.InitResource(cloud.Metric, id)
 	case cloudwatchtypes.MetricAlarm:
 		res = graph.InitResource(cloud.Alarm, awssdk.ToString(ss.AlarmArn))
+	case cloudwatchlogstypes.LogGroup:
+		res = graph.InitResource(cloud.LogGroup, awssdk.ToString(ss.LogGroupArn))
 	// CDN
 	case cloudfronttypes.DistributionSummary:
 		res = graph.InitResource(cloud.Distribution, awssdk.ToString(ss.Id))
@@ -452,6 +455,19 @@ var extractTimeWithZSuffixFn = func(i interface{}) (interface{}, error) {
 		return time.Parse("2006-01-02T15:04:05.000Z", t)
 	}
 	return nil, fmt.Errorf("extract time: expected a time or a time string, got: %T", i)
+}
+
+// CloudWatch Logs reports times as milliseconds since the epoch rather than as a
+// time, so the generic time transforms would reject them.
+var extractEpochMillisFn = func(i interface{}) (interface{}, error) {
+	p, ok := i.(*int64)
+	if !ok {
+		return nil, fmt.Errorf("extract epoch millis: expected *int64, got: %T", i)
+	}
+	if p == nil {
+		return nil, nil
+	}
+	return time.UnixMilli(*p).UTC(), nil
 }
 
 var extractIpPermissionSliceFn = func(i interface{}) (interface{}, error) {

@@ -81,8 +81,9 @@ const (
 	ScalingGroup        string = "scalinggroup"
 	ScalingPolicy       string = "scalingpolicy"
 	//monitoring
-	Metric string = "metric"
-	Alarm  string = "alarm"
+	Metric   string = "metric"
+	Alarm    string = "alarm"
+	LogGroup string = "loggroup"
 	//cdn
 	Distribution string = "distribution"
 	//cloudformation

@@ -38,6 +38,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
@@ -104,6 +105,16 @@ type CloudwatchAPI interface {
 type generatedCloudwatchAPI interface {
 	DescribeAlarms(context.Context, *cloudwatch.DescribeAlarmsInput, ...func(*cloudwatch.Options)) (*cloudwatch.DescribeAlarmsOutput, error)
 	ListMetrics(context.Context, *cloudwatch.ListMetricsInput, ...func(*cloudwatch.Options)) (*cloudwatch.ListMetricsOutput, error)
+}
+
+// CloudwatchlogsAPI is every cloudwatchlogs operation awless-ro calls.
+type CloudwatchlogsAPI interface {
+	generatedCloudwatchlogsAPI
+	manualCloudwatchlogsAPI
+}
+
+type generatedCloudwatchlogsAPI interface {
+	DescribeLogGroups(context.Context, *cloudwatchlogs.DescribeLogGroupsInput, ...func(*cloudwatchlogs.Options)) (*cloudwatchlogs.DescribeLogGroupsOutput, error)
 }
 
 // Ec2API is every ec2 operation awless-ro calls.
@@ -260,6 +271,7 @@ var (
 	_ CloudformationAPI = (*cloudformation.Client)(nil)
 	_ CloudfrontAPI     = (*cloudfront.Client)(nil)
 	_ CloudwatchAPI     = (*cloudwatch.Client)(nil)
+	_ CloudwatchlogsAPI = (*cloudwatchlogs.Client)(nil)
 	_ Ec2API            = (*ec2.Client)(nil)
 	_ EcrAPI            = (*ecr.Client)(nil)
 	_ EcsAPI            = (*ecs.Client)(nil)

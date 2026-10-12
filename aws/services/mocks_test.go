@@ -31,6 +31,7 @@ type (
 	manualCloudformationMock struct{}
 	manualCloudfrontMock     struct{}
 	manualCloudwatchMock     struct{}
+	manualCloudwatchlogsMock struct{}
 	manualEc2Mock            struct{}
 	manualEcrMock            struct{}
 	manualElbMock            struct{}

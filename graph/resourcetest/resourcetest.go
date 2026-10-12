@@ -142,6 +142,10 @@ func Metric(id string) *rBuilder {
 	return new("metric", id)
 }
 
+func LogGroup(id string) *rBuilder {
+	return new("loggroup", id)
+}
+
 func Image(id string) *rBuilder {
 	return new("image", id)
 }

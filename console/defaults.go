@@ -70,6 +70,7 @@ var ColumnsInListing = map[string][]string{
 	cloud.Function:            {properties.Name, properties.Size, properties.Memory, properties.Runtime, properties.Version, properties.Modified, properties.Description},
 	cloud.Metric:              {properties.ID, properties.Name, properties.Namespace, properties.Dimensions},
 	cloud.Alarm:               {properties.Name, properties.Namespace, properties.MetricName, properties.Description, properties.State, properties.Updated, properties.Dimensions},
+	cloud.LogGroup:            {properties.Name, properties.Class, properties.RetentionDays, properties.Size, properties.Created},
 	cloud.Distribution:        {properties.ID, properties.PublicDNS, properties.Enabled, properties.State, properties.Modified, properties.Aliases, properties.SSLSupportMethod, properties.Origins},
 	cloud.Stack:               {properties.ID, properties.Name, properties.State, properties.Created, properties.Modified},
 }
@@ -474,6 +475,13 @@ var DefaultsColumnDefinitions = map[string][]ColumnDefinition{
 		StringColumnDefinition{Prop: properties.State},
 		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.Updated}},
 		KeyValuesColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.Dimensions}},
+	},
+	cloud.LogGroup: {
+		StringColumnDefinition{Prop: properties.Name},
+		StringColumnDefinition{Prop: properties.Class},
+		StringColumnDefinition{Prop: properties.RetentionDays, Friendly: "Retention (days)"},
+		StorageColumnDefinition{Unit: b, StringColumnDefinition: StringColumnDefinition{Prop: properties.Size}},
+		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.Created}},
 	},
 	//CDN
 	cloud.Distribution: {

@@ -298,10 +298,11 @@ var FetchersDefs = []FetchersDef{
 	},
 	{
 		Name: "monitoring",
-		Api:  []string{"cloudwatch"},
+		Api:  []string{"cloudwatch", "cloudwatchlogs"},
 		Fetchers: []Fetcher{
 			{Api: "cloudwatch", ResourceType: cloud.Metric, AWSType: "cloudwatchtypes.Metric", ApiMethod: "ListMetrics", OutputsExtractor: "Metrics", Paginated: true},
 			{Api: "cloudwatch", ResourceType: cloud.Alarm, AWSType: "cloudwatchtypes.MetricAlarm", ApiMethod: "DescribeAlarms", OutputsExtractor: "MetricAlarms", Paginated: true},
+			{Api: "cloudwatchlogs", ResourceType: cloud.LogGroup, AWSType: "cloudwatchlogstypes.LogGroup", ApiMethod: "DescribeLogGroups", OutputsExtractor: "LogGroups", Paginated: true},
 		},
 	},
 	{

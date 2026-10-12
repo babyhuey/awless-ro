@@ -47,7 +47,7 @@ var configDefinitions = map[string]*Definition{
 	"aws.dns.sync":              {help: "Enable/disable sync of DNS service (when empty: true)", defaultValue: "true", parseParamFn: parseBool},
 	"aws.dns.record.sync":       {help: "Sync DNS records: off by default, one API call per hosted zone", defaultValue: "false", parseParamFn: parseBool},
 	"aws.notification.sync":     {help: "Enable/disable sync of SNS service (when empty: true)", defaultValue: "true", parseParamFn: parseBool},
-	"aws.monitoring.sync":       {help: "Sync CloudWatch metrics and alarms: off by default, large in busy accounts", defaultValue: "false", parseParamFn: parseBool},
+	"aws.monitoring.sync":       {help: "Sync CloudWatch metrics, alarms and log groups: off by default, large in busy accounts", defaultValue: "false", parseParamFn: parseBool},
 	"aws.lambda.sync":           {help: "Enable/disable sync of Lambda service (when empty: true)", defaultValue: "true", parseParamFn: parseBool},
 	"aws.messaging.sync":        {help: "Enable/disable sync of SQS/SNS service (when empty: true)", defaultValue: "true", parseParamFn: parseBool},
 	"aws.cdn.sync":              {help: "Enable/disable sync of CloudFront service (when empty: true)", defaultValue: "true", parseParamFn: parseBool},

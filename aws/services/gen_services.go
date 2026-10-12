@@ -36,6 +36,8 @@ import (
 	cloudfronttypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	cloudwatchtypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	cloudwatchlogstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
@@ -129,6 +131,7 @@ var ResourceTypes = []string{
 	"function",
 	"metric",
 	"alarm",
+	"loggroup",
 	"distribution",
 	"stack",
 }
@@ -150,6 +153,7 @@ var ServicePerAPI = map[string]string{
 	"route53":        "dns",
 	"lambda":         "lambda",
 	"cloudwatch":     "monitoring",
+	"cloudwatchlogs": "monitoring",
 	"cloudfront":     "cdn",
 	"cloudformation": "cloudformation",
 }
@@ -202,6 +206,7 @@ var ServicePerResourceType = map[string]string{
 	"function":            "lambda",
 	"metric":              "monitoring",
 	"alarm":               "monitoring",
+	"loggroup":            "monitoring",
 	"distribution":        "cdn",
 	"stack":               "cloudformation",
 }
@@ -254,6 +259,7 @@ var APIPerResourceType = map[string]string{
 	"function":            "lambda",
 	"metric":              "cloudwatch",
 	"alarm":               "cloudwatch",
+	"loggroup":            "cloudwatchlogs",
 	"distribution":        "cloudfront",
 	"stack":               "cloudformation",
 }
@@ -1902,25 +1908,29 @@ type Monitoring struct {
 	config          map[string]interface{}
 	log             *logger.Logger
 	awsfetch.CloudwatchAPI
+	awsfetch.CloudwatchlogsAPI
 }
 
 func NewMonitoring(cfg awssdk.Config, profile string, extraConf map[string]interface{}, log *logger.Logger) cloud.Service {
 	region := cfg.Region
 	cloudwatchAPI := cloudwatch.NewFromConfig(cfg)
+	cloudwatchlogsAPI := cloudwatchlogs.NewFromConfig(cfg)
 
 	fetchConfig := awsfetch.NewConfig(&awsfetch.AWSAPI{
-		Cloudwatch: cloudwatchAPI,
+		Cloudwatch:     cloudwatchAPI,
+		Cloudwatchlogs: cloudwatchlogsAPI,
 	})
 	fetchConfig.Extra = extraConf
 	fetchConfig.Log = log
 
 	return &Monitoring{
-		CloudwatchAPI: cloudwatchAPI,
-		fetcher:       fetch.NewFetcher(awsfetch.BuildMonitoringFetchFuncs(fetchConfig)),
-		config:        extraConf,
-		region:        region,
-		profile:       profile,
-		log:           log,
+		CloudwatchAPI:     cloudwatchAPI,
+		CloudwatchlogsAPI: cloudwatchlogsAPI,
+		fetcher:           fetch.NewFetcher(awsfetch.BuildMonitoringFetchFuncs(fetchConfig)),
+		config:            extraConf,
+		region:            region,
+		profile:           profile,
+		log:               log,
 	}
 }
 
@@ -1940,6 +1950,7 @@ func (s *Monitoring) ResourceTypes() []string {
 	return []string{
 		"metric",
 		"alarm",
+		"loggroup",
 	}
 }
 
@@ -2006,6 +2017,27 @@ func (s *Monitoring) Fetch(ctx context.Context) (cloud.GraphAPI, error) {
 			for _, fn := range addParentsFns["alarm"] {
 				wg.Add(1)
 				go func(f addParentFn, snap triplestore.RDFGraph, region string, res cloudwatchtypes.MetricAlarm) {
+					defer wg.Done()
+					if err := f(gph, snap, region, res); err != nil {
+						errc <- err
+					}
+				}(fn, snap, s.region, r)
+			}
+		}
+	}
+	if getBool(s.config, "aws.monitoring.loggroup.sync", true) {
+		list, err := s.fetcher.Get("loggroup_objects")
+		if err != nil {
+			return gph, err
+		}
+		objects, ok := list.([]cloudwatchlogstypes.LogGroup)
+		if !ok {
+			return gph, errors.New("cannot cast to '[]cloudwatchlogstypes.LogGroup' type from fetch context")
+		}
+		for _, r := range objects {
+			for _, fn := range addParentsFns["loggroup"] {
+				wg.Add(1)
+				go func(f addParentFn, snap triplestore.RDFGraph, region string, res cloudwatchlogstypes.LogGroup) {
 					defer wg.Done()
 					if err := f(gph, snap, region, res); err != nil {
 						errc <- err

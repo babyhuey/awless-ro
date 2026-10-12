@@ -32,6 +32,8 @@ import (
 	cloudfronttypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	cloudwatchtypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	cloudwatchlogstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
@@ -1107,6 +1109,37 @@ func BuildMonitoringFetchFuncs(conf *Config) fetch.Funcs {
 			}
 
 			for _, output := range out.MetricAlarms {
+				objects = append(objects, output)
+				res, err := awsconv.NewResource(output)
+				if err != nil {
+					return resources, objects, err
+				}
+				resources = append(resources, res)
+			}
+		}
+
+		return resources, objects, nil
+	}
+
+	funcs["loggroup"] = func(ctx context.Context, cache fetch.Cache) ([]*graph.Resource, interface{}, error) {
+		var resources []*graph.Resource
+		var objects []cloudwatchlogstypes.LogGroup
+
+		if !conf.getBoolDefaultTrue("aws.monitoring.loggroup.sync") && !getBoolFromContext(ctx, "force") {
+			conf.Log.Verbose("sync: *disabled* for resource monitoring[loggroup]")
+			return resources, objects, nil
+		}
+
+		input := &cloudwatchlogs.DescribeLogGroupsInput{}
+
+		paginator := cloudwatchlogs.NewDescribeLogGroupsPaginator(conf.APIs.Cloudwatchlogs, input)
+		for paginator.HasMorePages() {
+			out, err := paginator.NextPage(ctx)
+			if err != nil {
+				return resources, objects, err
+			}
+
+			for _, output := range out.LogGroups {
 				objects = append(objects, output)
 				res, err := awsconv.NewResource(output)
 				if err != nil {

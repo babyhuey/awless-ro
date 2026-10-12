@@ -46,6 +46,8 @@ import (
 	cloudfronttypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	cloudwatchtypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	cloudwatchlogstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
@@ -217,6 +219,33 @@ func (m *mockCloudwatch) ListMetrics(_ context.Context, _ *cloudwatch.ListMetric
 
 func (m *mockCloudwatch) DescribeAlarms(_ context.Context, _ *cloudwatch.DescribeAlarmsInput, _ ...func(*cloudwatch.Options)) (*cloudwatch.DescribeAlarmsOutput, error) {
 	return &cloudwatch.DescribeAlarmsOutput{MetricAlarms: m.metricalarms}, nil
+}
+
+type mockCloudwatchlogs struct {
+	awsfetch.CloudwatchlogsAPI
+	manualCloudwatchlogsMock
+	loggroups []cloudwatchlogstypes.LogGroup
+}
+
+// cloud.Service, so that a mock can stand in for a whole service in the
+// registry. The graph-building tests drive the fetchers directly, so these are
+// inert on purpose.
+func (m *mockCloudwatchlogs) Name() string            { return "" }
+func (m *mockCloudwatchlogs) Region() string          { return "" }
+func (m *mockCloudwatchlogs) Profile() string         { return "" }
+func (m *mockCloudwatchlogs) ResourceTypes() []string { return []string{} }
+func (m *mockCloudwatchlogs) IsSyncDisabled() bool    { return false }
+
+func (m *mockCloudwatchlogs) Fetch(context.Context) (cloud.GraphAPI, error) {
+	return nil, nil
+}
+
+func (m *mockCloudwatchlogs) FetchByType(context.Context, string) (cloud.GraphAPI, error) {
+	return nil, nil
+}
+
+func (m *mockCloudwatchlogs) DescribeLogGroups(_ context.Context, _ *cloudwatchlogs.DescribeLogGroupsInput, _ ...func(*cloudwatchlogs.Options)) (*cloudwatchlogs.DescribeLogGroupsOutput, error) {
+	return &cloudwatchlogs.DescribeLogGroupsOutput{LogGroups: m.loggroups}, nil
 }
 
 type mockEc2 struct {

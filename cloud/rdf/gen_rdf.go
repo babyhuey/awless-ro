@@ -181,6 +181,7 @@ const (
 	Region                            = "cloud:region"
 	RegisteredContainerInstancesCount = "cloud:registeredContainerInstancesCount"
 	ReplicaOf                         = "cloud:replicaOf"
+	RetentionDays                     = "cloud:retentionDays"
 	Role                              = "cloud:role"
 	Roles                             = "cloud:roles"
 	RootDevice                        = "cloud:rootDevice"
@@ -395,6 +396,7 @@ func init() {
 		properties.Region:                            Region,
 		properties.RegisteredContainerInstancesCount: RegisteredContainerInstancesCount,
 		properties.ReplicaOf:                         ReplicaOf,
+		properties.RetentionDays:                     RetentionDays,
 		properties.Role:                              Role,
 		properties.Roles:                             Roles,
 		properties.RootDevice:                        RootDevice,
@@ -609,6 +611,7 @@ var Properties = RDFProperties{
 	Region:                            {ID: Region, RdfType: "rdf:Property", RdfsLabel: "Region", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	RegisteredContainerInstancesCount: {ID: RegisteredContainerInstancesCount, RdfType: "rdf:Property", RdfsLabel: "RegisteredContainerInstancesCount", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:int"},
 	ReplicaOf:                         {ID: ReplicaOf, RdfType: "rdf:Property", RdfsLabel: "ReplicaOf", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
+	RetentionDays:                     {ID: RetentionDays, RdfType: "rdf:Property", RdfsLabel: "RetentionDays", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:int"},
 	Role:                              {ID: Role, RdfType: "rdf:Property", RdfsLabel: "Role", RdfsDefinedBy: "rdfs:Class", RdfsDataType: "xsd:string"},
 	Roles:                             {ID: Roles, RdfType: "rdf:Property", RdfsLabel: "Roles", RdfsDefinedBy: "rdfs:list", RdfsDataType: "rdfs:Class"},
 	RootDevice:                        {ID: RootDevice, RdfType: "rdf:Property", RdfsLabel: "RootDevice", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},

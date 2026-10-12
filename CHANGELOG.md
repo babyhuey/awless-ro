@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `list loggroups`: CloudWatch Logs log groups with their class, retention, stored
+  size and creation time. Part of the monitoring service, so `sync` fetches them only
+  when `aws.monitoring.sync` is on.
+
 ## v0.4.0
 
 ### Added

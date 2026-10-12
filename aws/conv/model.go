@@ -513,6 +513,14 @@ var awsResourcesDef = map[string]map[string]*propertyTransform{
 		properties.Updated:                 {name: "StateUpdatedTimestamp", transform: extractValueFn},
 		properties.State:                   {name: "StateValue", transform: extractValueFn},
 	},
+	cloud.LogGroup: {
+		properties.Arn:           {name: "LogGroupArn", transform: extractValueFn},
+		properties.Name:          {name: "LogGroupName", transform: extractValueFn},
+		properties.Class:         {name: "LogGroupClass", transform: extractValueFn},
+		properties.RetentionDays: {name: "RetentionInDays", transform: extractValueFn},
+		properties.Size:          {name: "StoredBytes", transform: extractValueFn},
+		properties.Created:       {name: "CreationTime", transform: extractEpochMillisFn},
+	},
 	// CDN
 	cloud.Distribution: {
 		properties.Arn:                {name: "ARN", transform: extractValueFn},

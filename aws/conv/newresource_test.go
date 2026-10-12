@@ -44,6 +44,7 @@ import (
 	cloudformationtypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	cloudfronttypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	cloudwatchtypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
+	cloudwatchlogstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	ecrtypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	ecstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
@@ -196,6 +197,9 @@ var sdkPrototypes = map[string][]func() interface{}{
 	}},
 	cloud.Alarm: {func() interface{} {
 		return cloudwatchtypes.MetricAlarm{AlarmArn: awssdk.String("arn:aws:cloudwatch:alarm/1")}
+	}},
+	cloud.LogGroup: {func() interface{} {
+		return cloudwatchlogstypes.LogGroup{LogGroupArn: awssdk.String("arn:aws:logs:log-group:/1")}
 	}},
 
 	// CDN

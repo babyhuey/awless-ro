@@ -176,6 +176,7 @@ var PropertiesDefinitions = []property{
 	{AwlessLabel: "Region", RDFLabel: fmt.Sprintf("%s:region", rdf.CloudNS), RDFType: rdf.RdfProperty, RdfsDefinedBy: rdf.RdfsLiteral, RdfsDataType: rdf.XsdString},
 	{AwlessLabel: "RegisteredContainerInstancesCount", RDFLabel: fmt.Sprintf("%s:registeredContainerInstancesCount", rdf.CloudNS), RDFType: rdf.RdfProperty, RdfsDefinedBy: rdf.RdfsLiteral, RdfsDataType: rdf.XsdInt},
 	{AwlessLabel: "ReplicaOf", RDFLabel: fmt.Sprintf("%s:replicaOf", rdf.CloudNS), RDFType: rdf.RdfProperty, RdfsDefinedBy: rdf.RdfsLiteral, RdfsDataType: rdf.XsdString},
+	{AwlessLabel: "RetentionDays", RDFLabel: fmt.Sprintf("%s:retentionDays", rdf.CloudNS), RDFType: rdf.RdfProperty, RdfsDefinedBy: rdf.RdfsLiteral, RdfsDataType: rdf.XsdInt},
 	{AwlessLabel: "Role", RDFLabel: fmt.Sprintf("%s:role", rdf.CloudNS), RDFType: rdf.RdfProperty, RdfsDefinedBy: rdf.RdfsClass, RdfsDataType: rdf.XsdString},
 	{AwlessLabel: "Roles", RDFLabel: fmt.Sprintf("%s:roles", rdf.CloudNS), RDFType: rdf.RdfProperty, RdfsDefinedBy: rdf.RdfsList, RdfsDataType: rdf.RdfsClass},
 	{AwlessLabel: "RootDevice", RDFLabel: fmt.Sprintf("%s:rootDevice", rdf.CloudNS), RDFType: rdf.RdfProperty, RdfsDefinedBy: rdf.RdfsLiteral, RdfsDataType: rdf.XsdString},

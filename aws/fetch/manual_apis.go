@@ -41,15 +41,16 @@ import (
 // Services every one of whose calls is generated still need an interface half
 // for gen_apis.go to embed.
 type (
-	manualAcmAPI        interface{}
-	manualCloudfrontAPI interface{}
-	manualCloudwatchAPI interface{}
-	manualEc2API        interface{}
-	manualEcrAPI        interface{}
-	manualElbAPI        interface{}
-	manualLambdaAPI     interface{}
-	manualRdsAPI        interface{}
-	manualSnsAPI        interface{}
+	manualAcmAPI            interface{}
+	manualCloudfrontAPI     interface{}
+	manualCloudwatchAPI     interface{}
+	manualCloudwatchlogsAPI interface{}
+	manualEc2API            interface{}
+	manualEcrAPI            interface{}
+	manualElbAPI            interface{}
+	manualLambdaAPI         interface{}
+	manualRdsAPI            interface{}
+	manualSnsAPI            interface{}
 )
 
 // autoscaling: the scaling activity tailer.

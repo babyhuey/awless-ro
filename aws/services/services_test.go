@@ -32,6 +32,7 @@ import (
 	cloudformationtypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	cloudfronttypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	cloudwatchtypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
+	cloudwatchlogstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	ecrtypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	ecstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
@@ -1100,11 +1101,25 @@ func TestBuildMonitoringGraph(t *testing.T) {
 		},
 	}
 
+	created := time.Date(2024, time.March, 1, 12, 0, 0, 0, time.UTC)
+	loggroups := []cloudwatchlogstypes.LogGroup{
+		{LogGroupArn: awssdk.String("loggroup_1"), LogGroupName: awssdk.String("/aws/lambda/one")},
+		{
+			LogGroupArn:     awssdk.String("loggroup_2"),
+			LogGroupName:    awssdk.String("/ecs/two"),
+			LogGroupClass:   cloudwatchlogstypes.LogGroupClassInfrequentAccess,
+			RetentionInDays: awssdk.Int32(30),
+			StoredBytes:     awssdk.Int64(2048),
+			CreationTime:    awssdk.Int64(created.UnixMilli()),
+		},
+	}
+
 	mock := &mockCloudwatch{metrics: metrics, metricalarms: alarms}
+	logsMock := &mockCloudwatchlogs{loggroups: loggroups}
 
 	service := Monitoring{
-		CloudwatchAPI: mock, region: "eu-west-1",
-		fetcher: fetch.NewFetcher(awsfetch.BuildMonitoringFetchFuncs(awsfetch.NewConfig(&awsfetch.AWSAPI{Cloudwatch: mock}))),
+		CloudwatchAPI: mock, CloudwatchlogsAPI: logsMock, region: "eu-west-1",
+		fetcher: fetch.NewFetcher(awsfetch.BuildMonitoringFetchFuncs(awsfetch.NewConfig(&awsfetch.AWSAPI{Cloudwatch: mock, Cloudwatchlogs: logsMock}))),
 	}
 
 	g, err := service.Fetch(context.Background())
@@ -1112,7 +1127,7 @@ func TestBuildMonitoringGraph(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resources, err := g.Find(cloud.NewQuery("metric", "alarm"))
+	resources, err := g.Find(cloud.NewQuery("metric", "alarm", "loggroup"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1147,10 +1162,13 @@ func TestBuildMonitoringGraph(t *testing.T) {
 		"alarm_3": resourcetest.Alarm("alarm_3").Prop(p.Arn, "alarm_3").Prop(p.Name, "my_alarm").Prop(p.ActionsEnabled, true).Prop(p.AlarmActions, []string{"action_arn_1", "action_arn_2", "action_arn_3"}).Prop(p.InsufficientDataActions, []string{"action_arn_1", "action_arn_3"}).
 			Prop(p.OKActions, []string{"action_arn_2"}).Prop(p.Description, "my alarm description").Prop(p.Dimensions, []*graph.KeyValue{{KeyName: "first", Value: "dimension"}, {KeyName: "second", Value: "dimension"}}).Prop(p.MetricName, "metric_2").
 			Prop(p.Namespace, "namespace_2").Prop(p.Updated, now).Prop(p.State, "OK").Build(),
+		"loggroup_1": resourcetest.LogGroup("loggroup_1").Prop(p.Arn, "loggroup_1").Prop(p.Name, "/aws/lambda/one").Build(),
+		"loggroup_2": resourcetest.LogGroup("loggroup_2").Prop(p.Arn, "loggroup_2").Prop(p.Name, "/ecs/two").Prop(p.Class, "INFREQUENT_ACCESS").
+			Prop(p.RetentionDays, 30).Prop(p.Size, 2048).Prop(p.Created, created).Build(),
 	}
 
 	expectedChildren := map[string][]string{
-		"eu-west-1": {metricID("namespace_1", "metric_1"), metricID("namespace_1", "metric_2"), metricID("namespace_2", "metric_1"), metricID("namespace_2", "metric_2"), "alarm_1", "alarm_2", "alarm_3"},
+		"eu-west-1": {metricID("namespace_1", "metric_1"), metricID("namespace_1", "metric_2"), metricID("namespace_2", "metric_1"), metricID("namespace_2", "metric_2"), "alarm_1", "alarm_2", "alarm_3", "loggroup_1", "loggroup_2"},
 	}
 	expectedAppliedOn := map[string][]string{
 		"alarm_3": {metricID("namespace_2", "metric_2")},
