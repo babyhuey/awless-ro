@@ -42,6 +42,7 @@ import (
 // for gen_apis.go to embed.
 type (
 	manualAcmAPI            interface{}
+	manualCloudtrailAPI     interface{}
 	manualCloudfrontAPI     interface{}
 	manualCloudwatchAPI     interface{}
 	manualCloudwatchlogsAPI interface{}

@@ -37,6 +37,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -94,6 +95,16 @@ type CloudfrontAPI interface {
 
 type generatedCloudfrontAPI interface {
 	ListDistributions(context.Context, *cloudfront.ListDistributionsInput, ...func(*cloudfront.Options)) (*cloudfront.ListDistributionsOutput, error)
+}
+
+// CloudtrailAPI is every cloudtrail operation awless-ro calls.
+type CloudtrailAPI interface {
+	generatedCloudtrailAPI
+	manualCloudtrailAPI
+}
+
+type generatedCloudtrailAPI interface {
+	DescribeTrails(context.Context, *cloudtrail.DescribeTrailsInput, ...func(*cloudtrail.Options)) (*cloudtrail.DescribeTrailsOutput, error)
 }
 
 // CloudwatchAPI is every cloudwatch operation awless-ro calls.
@@ -270,6 +281,7 @@ var (
 	_ AutoscalingAPI    = (*autoscaling.Client)(nil)
 	_ CloudformationAPI = (*cloudformation.Client)(nil)
 	_ CloudfrontAPI     = (*cloudfront.Client)(nil)
+	_ CloudtrailAPI     = (*cloudtrail.Client)(nil)
 	_ CloudwatchAPI     = (*cloudwatch.Client)(nil)
 	_ CloudwatchlogsAPI = (*cloudwatchlogs.Client)(nil)
 	_ Ec2API            = (*ec2.Client)(nil)

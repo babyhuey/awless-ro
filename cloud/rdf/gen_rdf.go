@@ -131,6 +131,7 @@ const (
 	License                           = "cloud:license"
 	Lifecycle                         = "cloud:lifecycle"
 	LoadBalancer                      = "cloud:loadBalancer"
+	LogFileValidation                 = "cloud:logFileValidation"
 	Location                          = "cloud:location"
 	MACAddress                        = "cloud:macAddress"
 	Main                              = "cloud:main"
@@ -143,6 +144,7 @@ const (
 	MonitoringInterval                = "cloud:monitoringInterval"
 	MonitoringRole                    = "cloud:monitoringRole"
 	MultiAZ                           = "cloud:multiAZ"
+	MultiRegion                       = "cloud:multiRegion"
 	Name                              = "cloud:name"
 	Namespace                         = "cloud:namemespace"
 	NetworkInterfaces                 = "cloud:networkInterfaces"
@@ -150,6 +152,7 @@ const (
 	Notifications                     = "cloud:notifications"
 	OKActions                         = "cloud:okActions"
 	OptionGroups                      = "cloud:optionGroups"
+	OrganizationTrail                 = "cloud:organizationTrail"
 	Origins                           = "cloud:origins"
 	OutboundRules                     = "net:outboundRules"
 	Outputs                           = "cloud:outputs"
@@ -346,6 +349,7 @@ func init() {
 		properties.License:                           License,
 		properties.Lifecycle:                         Lifecycle,
 		properties.LoadBalancer:                      LoadBalancer,
+		properties.LogFileValidation:                 LogFileValidation,
 		properties.Location:                          Location,
 		properties.MACAddress:                        MACAddress,
 		properties.Main:                              Main,
@@ -358,6 +362,7 @@ func init() {
 		properties.MonitoringInterval:                MonitoringInterval,
 		properties.MonitoringRole:                    MonitoringRole,
 		properties.MultiAZ:                           MultiAZ,
+		properties.MultiRegion:                       MultiRegion,
 		properties.Name:                              Name,
 		properties.Namespace:                         Namespace,
 		properties.NetworkInterfaces:                 NetworkInterfaces,
@@ -365,6 +370,7 @@ func init() {
 		properties.Notifications:                     Notifications,
 		properties.OKActions:                         OKActions,
 		properties.OptionGroups:                      OptionGroups,
+		properties.OrganizationTrail:                 OrganizationTrail,
 		properties.Origins:                           Origins,
 		properties.OutboundRules:                     OutboundRules,
 		properties.Outputs:                           Outputs,
@@ -561,6 +567,7 @@ var Properties = RDFProperties{
 	License:                           {ID: License, RdfType: "rdf:Property", RdfsLabel: "License", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	Lifecycle:                         {ID: Lifecycle, RdfType: "rdf:Property", RdfsLabel: "Lifecycle", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	LoadBalancer:                      {ID: LoadBalancer, RdfType: "rdf:Property", RdfsLabel: "LoadBalancer", RdfsDefinedBy: "rdfs:Class", RdfsDataType: "xsd:string"},
+	LogFileValidation:                 {ID: LogFileValidation, RdfType: "rdf:Property", RdfsLabel: "LogFileValidation", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:boolean"},
 	Location:                          {ID: Location, RdfType: "rdf:Property", RdfsLabel: "Location", RdfsDefinedBy: "rdfs:Class", RdfsDataType: "xsd:string"},
 	MACAddress:                        {ID: MACAddress, RdfType: "rdf:Property", RdfsLabel: "MACAddress", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	Main:                              {ID: Main, RdfType: "rdf:Property", RdfsLabel: "Main", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:boolean"},
@@ -573,6 +580,7 @@ var Properties = RDFProperties{
 	MonitoringInterval:                {ID: MonitoringInterval, RdfType: "rdf:Property", RdfsLabel: "MonitoringInterval", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	MonitoringRole:                    {ID: MonitoringRole, RdfType: "rdf:Property", RdfsLabel: "MonitoringRole", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	MultiAZ:                           {ID: MultiAZ, RdfType: "rdf:Property", RdfsLabel: "MultiAZ", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
+	MultiRegion:                       {ID: MultiRegion, RdfType: "rdf:Property", RdfsLabel: "MultiRegion", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:boolean"},
 	Name:                              {ID: Name, RdfType: "rdf:Property", RdfsLabel: "Name", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	Namespace:                         {ID: Namespace, RdfType: "rdf:Property", RdfsLabel: "Namespace", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	NetworkInterfaces:                 {ID: NetworkInterfaces, RdfType: "rdf:Property", RdfsLabel: "NetworkInterfaces", RdfsDefinedBy: "rdfs:list", RdfsDataType: "xsd:string"},
@@ -580,6 +588,7 @@ var Properties = RDFProperties{
 	Notifications:                     {ID: Notifications, RdfType: "rdf:Property", RdfsLabel: "Notifications", RdfsDefinedBy: "rdfs:list", RdfsDataType: "rdfs:Class"},
 	OKActions:                         {ID: OKActions, RdfType: "rdf:Property", RdfsLabel: "OKActions", RdfsDefinedBy: "rdfs:list", RdfsDataType: "xsd:string"},
 	OptionGroups:                      {ID: OptionGroups, RdfType: "rdf:Property", RdfsLabel: "OptionGroups", RdfsDefinedBy: "rdfs:list", RdfsDataType: "xsd:string"},
+	OrganizationTrail:                 {ID: OrganizationTrail, RdfType: "rdf:Property", RdfsLabel: "OrganizationTrail", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:boolean"},
 	Origins:                           {ID: Origins, RdfType: "rdf:Property", RdfsLabel: "Origins", RdfsDefinedBy: "rdfs:list", RdfsDataType: "cloud-owl:DistributionOrigin"},
 	OutboundRules:                     {ID: OutboundRules, RdfType: "rdf:Property", RdfsLabel: "OutboundRules", RdfsDefinedBy: "rdfs:list", RdfsDataType: "net-owl:FirewallRule"},
 	Outputs:                           {ID: Outputs, RdfType: "rdf:Property", RdfsLabel: "Outputs", RdfsDefinedBy: "rdfs:list", RdfsDataType: "cloud-owl:KeyValue"},

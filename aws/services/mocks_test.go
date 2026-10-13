@@ -30,6 +30,7 @@ type (
 	manualAutoscalingMock    struct{}
 	manualCloudformationMock struct{}
 	manualCloudfrontMock     struct{}
+	manualCloudtrailMock     struct{}
 	manualCloudwatchMock     struct{}
 	manualCloudwatchlogsMock struct{}
 	manualEc2Mock            struct{}

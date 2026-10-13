@@ -88,6 +88,8 @@ const (
 	Distribution string = "distribution"
 	//cloudformation
 	Stack string = "stack"
+	//cloudtrail
+	Trail string = "trail"
 	//container
 	Repository        string = "repository"
 	Registry          string = "registry"

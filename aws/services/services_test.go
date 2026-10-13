@@ -31,6 +31,7 @@ import (
 	autoscalingtypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	cloudformationtypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	cloudfronttypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	cloudtrailtypes "github.com/aws/aws-sdk-go-v2/service/cloudtrail/types"
 	cloudwatchtypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	cloudwatchlogstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -1173,6 +1174,50 @@ func TestBuildMonitoringGraph(t *testing.T) {
 	expectedAppliedOn := map[string][]string{
 		"alarm_3": {metricID("namespace_2", "metric_2")},
 	}
+
+	compareResources(t, g, resources, expected, expectedChildren, expectedAppliedOn)
+}
+
+func TestBuildCloudtrailGraph(t *testing.T) {
+	trails := []cloudtrailtypes.Trail{
+		{TrailARN: awssdk.String("trail_1"), Name: awssdk.String("management")},
+		{
+			TrailARN:                 awssdk.String("trail_2"),
+			Name:                     awssdk.String("org-audit"),
+			S3BucketName:             awssdk.String("audit-logs"),
+			IsMultiRegionTrail:       awssdk.Bool(true),
+			IsOrganizationTrail:      awssdk.Bool(true),
+			LogFileValidationEnabled: awssdk.Bool(false),
+		},
+	}
+
+	mock := &mockCloudtrail{trails: trails}
+
+	service := Cloudtrail{
+		CloudtrailAPI: mock, region: "eu-west-1",
+		fetcher: fetch.NewFetcher(awsfetch.BuildCloudtrailFetchFuncs(awsfetch.NewConfig(&awsfetch.AWSAPI{Cloudtrail: mock}))),
+	}
+
+	g, err := service.Fetch(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resources, err := g.Find(cloud.NewQuery("trail"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := map[string]cloud.Resource{
+		"trail_1": resourcetest.Trail("trail_1").Prop(p.Arn, "trail_1").Prop(p.Name, "management").Build(),
+		"trail_2": resourcetest.Trail("trail_2").Prop(p.Arn, "trail_2").Prop(p.Name, "org-audit").Prop(p.Bucket, "audit-logs").
+			Prop(p.MultiRegion, true).Prop(p.OrganizationTrail, true).Prop(p.LogFileValidation, false).Build(),
+	}
+
+	expectedChildren := map[string][]string{
+		"eu-west-1": {"trail_1", "trail_2"},
+	}
+	expectedAppliedOn := map[string][]string{}
 
 	compareResources(t, g, resources, expected, expectedChildren, expectedAppliedOn)
 }

@@ -27,6 +27,7 @@ type AWSAPI struct {
 	Cloudformation CloudformationAPI
 	Acm            AcmAPI
 	Cloudwatchlogs CloudwatchlogsAPI
+	Cloudtrail     CloudtrailAPI
 }
 
 type Config struct {

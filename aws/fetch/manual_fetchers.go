@@ -855,3 +855,5 @@ func addManualCdnFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 }
 func addManualCloudformationFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 }
+func addManualCloudtrailFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
+}
