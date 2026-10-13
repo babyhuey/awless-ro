@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 
 	awsconfigv2 "github.com/aws/aws-sdk-go-v2/config"
@@ -149,7 +150,7 @@ func applyRegionAndProfilePrecedence() error {
 	return nil
 }
 
-func notifyOnRegionOrProfilePrecedenceHook(*cobra.Command, []string) error {
+func notifyOnRegionOrProfilePrecedenceHook(cmd *cobra.Command, _ []string) error {
 	applyRegionAndProfilePrecedence()
 
 	if m := profileOverridenThrough; len(m) > 0 {
@@ -159,7 +160,51 @@ func notifyOnRegionOrProfilePrecedenceHook(*cobra.Command, []string) error {
 		logger.Infof("region precedence: '%s' loaded through %s", config.GetAWSRegion(), m)
 	}
 
+	if cmd.Name() == "switch" {
+		// switch refuses -p and -r (switchFlagsError), so an override here always
+		// comes from the environment or from the active profile's own region.
+		if requested, effective := switchRequestedProfile, config.GetAWSProfile(); requested != "" && requested != effective {
+			logger.Warningf("switch saved profile '%s', but %s overrides it with '%s'; %s", requested, profileOverridenThrough, effective, switchOverrideAdvice("profile", profileOverridenThrough, requested))
+		}
+		if requested, effective := switchRequestedRegion, config.GetAWSRegion(); requested != "" && requested != effective {
+			logger.Warningf("switch saved region '%s', but %s overrides it with '%s'; %s", requested, regionOverridenThrough, effective, switchOverrideAdvice("region", regionOverridenThrough, requested))
+		}
+	}
+
 	return nil
+}
+
+// switchOverrideAdvice says what to do when source overrides the value switch just
+// saved. Only unsetting a variable, or removing the region from a profile, makes the
+// saved value itself take effect; exporting the variable or passing the flag sets the
+// same value from somewhere else, so the advice does not claim they "use" it.
+func switchOverrideAdvice(setting, source, requested string) string {
+	flag := "--aws-" + setting
+	value := shellQuoteArg(requested)
+	switch source {
+	case "AWS_PROFILE variable", "AWS_DEFAULT_PROFILE variable", "AWS_DEFAULT_REGION variable":
+		variable := strings.TrimSuffix(source, " variable")
+		return fmt.Sprintf("unset %s to use it, export %s=%s, or pass %s %s on each command", variable, variable, value, flag, value)
+	default:
+		// The region set in the active profile is applied on every run
+		// (applyRegionAndProfilePrecedence, SetVolatile), so a region saved by switch
+		// is never used together with that profile.
+		return fmt.Sprintf("a region saved by switch is not used while that profile sets one: "+
+			"remove `region` from the profile, export AWS_DEFAULT_REGION=%s, or pass %s %s on each command", value, flag, value)
+	}
+}
+
+// shellSafeArg matches values a POSIX shell reads literally.
+var shellSafeArg = regexp.MustCompile(`^[A-Za-z0-9_@%+=:,./-]+$`)
+
+// shellQuoteArg quotes s, when it needs it, so that advice can be copied into a shell
+// as is. Profile names come from the user's own ~/.aws/config, so this is about a
+// correct copy-paste rather than untrusted input.
+func shellQuoteArg(s string) string {
+	if shellSafeArg.MatchString(s) {
+		return s
+	}
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
 }
 
 func initCloudServicesHook(cmd *cobra.Command, args []string) error {
