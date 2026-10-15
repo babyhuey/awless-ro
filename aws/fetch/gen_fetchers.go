@@ -30,6 +30,8 @@ import (
 	cloudformationtypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	cloudfronttypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
+	cloudtrailtypes "github.com/aws/aws-sdk-go-v2/service/cloudtrail/types"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	cloudwatchtypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
@@ -1225,6 +1227,41 @@ func BuildCloudformationFetchFuncs(conf *Config) fetch.Funcs {
 				}
 				resources = append(resources, res)
 			}
+		}
+
+		return resources, objects, nil
+	}
+	return funcs
+}
+
+func BuildCloudtrailFetchFuncs(conf *Config) fetch.Funcs {
+	funcs := make(map[string]fetch.Func)
+
+	addManualCloudtrailFetchFuncs(conf, funcs)
+
+	funcs["trail"] = func(ctx context.Context, cache fetch.Cache) ([]*graph.Resource, interface{}, error) {
+		var resources []*graph.Resource
+		var objects []cloudtrailtypes.Trail
+
+		if !conf.getBoolDefaultTrue("aws.cloudtrail.trail.sync") && !getBoolFromContext(ctx, "force") {
+			conf.Log.Verbose("sync: *disabled* for resource cloudtrail[trail]")
+			return resources, objects, nil
+		}
+
+		input := &cloudtrail.DescribeTrailsInput{IncludeShadowTrails: new(false)}
+
+		out, err := conf.APIs.Cloudtrail.DescribeTrails(ctx, input)
+		if err != nil {
+			return resources, objects, err
+		}
+
+		for _, output := range out.TrailList {
+			objects = append(objects, output)
+			res, err := awsconv.NewResource(output)
+			if err != nil {
+				return resources, objects, err
+			}
+			resources = append(resources, res)
 		}
 
 		return resources, objects, nil

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `list trails`: CloudTrail trails, each in its home region only, in a new `cloudtrail`
+  service synced by default (`aws.cloudtrail.sync`). (#65)
+
 ## v0.5.0
 
 **Breaking:** `switch` with `-p` or `-r` now exits 1 without saving anything. Pass the

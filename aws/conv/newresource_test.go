@@ -43,6 +43,7 @@ import (
 	autoscalingtypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	cloudformationtypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	cloudfronttypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	cloudtrailtypes "github.com/aws/aws-sdk-go-v2/service/cloudtrail/types"
 	cloudwatchtypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	cloudwatchlogstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -210,6 +211,11 @@ var sdkPrototypes = map[string][]func() interface{}{
 	// CloudFormation
 	cloud.Stack: {func() interface{} {
 		return cloudformationtypes.Stack{StackId: awssdk.String("arn:aws:cloudformation:stack/1")}
+	}},
+
+	// CloudTrail
+	cloud.Trail: {func() interface{} {
+		return cloudtrailtypes.Trail{TrailARN: awssdk.String("arn:aws:cloudtrail:trail/1")}
 	}},
 }
 

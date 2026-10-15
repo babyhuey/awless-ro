@@ -44,6 +44,8 @@ import (
 	cloudformationtypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	cloudfronttypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
+	cloudtrailtypes "github.com/aws/aws-sdk-go-v2/service/cloudtrail/types"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	cloudwatchtypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
@@ -187,6 +189,33 @@ func (m *mockCloudfront) FetchByType(context.Context, string) (cloud.GraphAPI, e
 
 func (m *mockCloudfront) ListDistributions(_ context.Context, _ *cloudfront.ListDistributionsInput, _ ...func(*cloudfront.Options)) (*cloudfront.ListDistributionsOutput, error) {
 	return &cloudfront.ListDistributionsOutput{DistributionList: &cloudfronttypes.DistributionList{Items: m.distributionsummarys}}, nil
+}
+
+type mockCloudtrail struct {
+	awsfetch.CloudtrailAPI
+	manualCloudtrailMock
+	trails []cloudtrailtypes.Trail
+}
+
+// cloud.Service, so that a mock can stand in for a whole service in the
+// registry. The graph-building tests drive the fetchers directly, so these are
+// inert on purpose.
+func (m *mockCloudtrail) Name() string            { return "" }
+func (m *mockCloudtrail) Region() string          { return "" }
+func (m *mockCloudtrail) Profile() string         { return "" }
+func (m *mockCloudtrail) ResourceTypes() []string { return []string{} }
+func (m *mockCloudtrail) IsSyncDisabled() bool    { return false }
+
+func (m *mockCloudtrail) Fetch(context.Context) (cloud.GraphAPI, error) {
+	return nil, nil
+}
+
+func (m *mockCloudtrail) FetchByType(context.Context, string) (cloud.GraphAPI, error) {
+	return nil, nil
+}
+
+func (m *mockCloudtrail) DescribeTrails(_ context.Context, _ *cloudtrail.DescribeTrailsInput, _ ...func(*cloudtrail.Options)) (*cloudtrail.DescribeTrailsOutput, error) {
+	return &cloudtrail.DescribeTrailsOutput{TrailList: m.trails}, nil
 }
 
 type mockCloudwatch struct {

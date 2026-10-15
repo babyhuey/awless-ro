@@ -320,4 +320,11 @@ var FetchersDefs = []FetchersDef{
 			{Api: "cloudformation", ResourceType: cloud.Stack, AWSType: "cloudformationtypes.Stack", ApiMethod: "DescribeStacks", OutputsExtractor: "Stacks", Paginated: true},
 		},
 	},
+	{
+		Name: "cloudtrail",
+		Api:  []string{"cloudtrail"},
+		Fetchers: []Fetcher{
+			{Api: "cloudtrail", ResourceType: cloud.Trail, AWSType: "cloudtrailtypes.Trail", ApiMethod: "DescribeTrails", InputFields: `IncludeShadowTrails: new(false)`, OutputsExtractor: "TrailList"},
+		},
+	},
 }

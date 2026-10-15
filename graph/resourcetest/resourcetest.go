@@ -146,6 +146,10 @@ func LogGroup(id string) *rBuilder {
 	return new("loggroup", id)
 }
 
+func Trail(id string) *rBuilder {
+	return new("trail", id)
+}
+
 func Image(id string) *rBuilder {
 	return new("image", id)
 }

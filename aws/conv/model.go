@@ -556,6 +556,15 @@ var awsResourcesDef = map[string]map[string]*propertyTransform{
 		properties.Parameters:      {name: "Parameters", transform: extractStackParametersFn},
 		properties.Outputs:         {name: "Outputs", transform: extractStackOutputsFn},
 	},
+	// CloudTrail
+	cloud.Trail: {
+		properties.Arn:               {name: "TrailARN", transform: extractValueFn},
+		properties.Name:              {name: "Name", transform: extractValueFn},
+		properties.Bucket:            {name: "S3BucketName", transform: extractValueFn},
+		properties.MultiRegion:       {name: "IsMultiRegionTrail", transform: extractValueFn},
+		properties.OrganizationTrail: {name: "IsOrganizationTrail", transform: extractValueFn},
+		properties.LogFileValidation: {name: "LogFileValidationEnabled", transform: extractValueFn},
+	},
 	//Queue
 	cloud.Queue: {}, //Manually set
 }

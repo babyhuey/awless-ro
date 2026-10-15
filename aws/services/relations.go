@@ -156,6 +156,7 @@ var addParentsFns = map[string][]addParentFn{
 	cloud.Metric:           {addRegionParent},
 	cloud.LogGroup:         {addRegionParent},
 	cloud.Stack:            {addRegionParent},
+	cloud.Trail:            {addRegionParent},
 	cloud.MFADevice: {
 		funcBuilder{parent: cloud.User, fieldName: "User.UserId", relation: DEPENDING_ON}.build(),
 	},

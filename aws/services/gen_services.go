@@ -34,6 +34,8 @@ import (
 	cloudformationtypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	cloudfronttypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
+	cloudtrailtypes "github.com/aws/aws-sdk-go-v2/service/cloudtrail/types"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	cloudwatchtypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
@@ -81,6 +83,7 @@ var ServiceNames = []string{
 	"monitoring",
 	"cdn",
 	"cloudformation",
+	"cloudtrail",
 }
 
 var ResourceTypes = []string{
@@ -134,6 +137,7 @@ var ResourceTypes = []string{
 	"loggroup",
 	"distribution",
 	"stack",
+	"trail",
 }
 
 var ServicePerAPI = map[string]string{
@@ -156,6 +160,7 @@ var ServicePerAPI = map[string]string{
 	"cloudwatchlogs": "monitoring",
 	"cloudfront":     "cdn",
 	"cloudformation": "cloudformation",
+	"cloudtrail":     "cloudtrail",
 }
 
 var ServicePerResourceType = map[string]string{
@@ -209,6 +214,7 @@ var ServicePerResourceType = map[string]string{
 	"loggroup":            "monitoring",
 	"distribution":        "cdn",
 	"stack":               "cloudformation",
+	"trail":               "cloudtrail",
 }
 
 var APIPerResourceType = map[string]string{
@@ -262,6 +268,7 @@ var APIPerResourceType = map[string]string{
 	"loggroup":            "cloudwatchlogs",
 	"distribution":        "cloudfront",
 	"stack":               "cloudformation",
+	"trail":               "cloudtrail",
 }
 
 type Infra struct {
@@ -2320,4 +2327,128 @@ func (s *Cloudformation) FetchByType(ctx context.Context, t string) (cloud.Graph
 
 func (s *Cloudformation) IsSyncDisabled() bool {
 	return !getBool(s.config, "aws.cloudformation.sync", true)
+}
+
+type Cloudtrail struct {
+	fetcher         fetch.Fetcher
+	region, profile string
+	config          map[string]interface{}
+	log             *logger.Logger
+	awsfetch.CloudtrailAPI
+}
+
+func NewCloudtrail(cfg awssdk.Config, profile string, extraConf map[string]interface{}, log *logger.Logger) cloud.Service {
+	region := cfg.Region
+	cloudtrailAPI := cloudtrail.NewFromConfig(cfg)
+
+	fetchConfig := awsfetch.NewConfig(&awsfetch.AWSAPI{
+		Cloudtrail: cloudtrailAPI,
+	})
+	fetchConfig.Extra = extraConf
+	fetchConfig.Log = log
+
+	return &Cloudtrail{
+		CloudtrailAPI: cloudtrailAPI,
+		fetcher:       fetch.NewFetcher(awsfetch.BuildCloudtrailFetchFuncs(fetchConfig)),
+		config:        extraConf,
+		region:        region,
+		profile:       profile,
+		log:           log,
+	}
+}
+
+func (s *Cloudtrail) Name() string {
+	return "cloudtrail"
+}
+
+func (s *Cloudtrail) Region() string {
+	return s.region
+}
+
+func (s *Cloudtrail) Profile() string {
+	return s.profile
+}
+
+func (s *Cloudtrail) ResourceTypes() []string {
+	return []string{
+		"trail",
+	}
+}
+
+func (s *Cloudtrail) Fetch(ctx context.Context) (cloud.GraphAPI, error) {
+	if s.IsSyncDisabled() {
+		return graph.NewGraph(), nil
+	}
+
+	allErrors := new(fetch.Error)
+
+	gph, err := s.fetcher.Fetch(context.WithValue(ctx, "region", s.region))
+	defer s.fetcher.Reset()
+
+	for _, e := range *fetch.WrapError(err) {
+		switch {
+		case e == nil:
+			continue
+		case awsfetch.IsAccessDenied(e):
+			allErrors.Add(cloud.ErrFetchAccessDenied)
+		default:
+			allErrors.Add(e)
+		}
+	}
+
+	if err := gph.AddResource(graph.InitResource(cloud.Region, s.region)); err != nil {
+		return gph, err
+	}
+
+	snap := gph.AsRDFGraphSnaphot()
+
+	errc := make(chan error)
+	var wg sync.WaitGroup
+	if getBool(s.config, "aws.cloudtrail.trail.sync", true) {
+		list, err := s.fetcher.Get("trail_objects")
+		if err != nil {
+			return gph, err
+		}
+		objects, ok := list.([]cloudtrailtypes.Trail)
+		if !ok {
+			return gph, errors.New("cannot cast to '[]cloudtrailtypes.Trail' type from fetch context")
+		}
+		for _, r := range objects {
+			for _, fn := range addParentsFns["trail"] {
+				wg.Add(1)
+				go func(f addParentFn, snap triplestore.RDFGraph, region string, res cloudtrailtypes.Trail) {
+					defer wg.Done()
+					if err := f(gph, snap, region, res); err != nil {
+						errc <- err
+					}
+				}(fn, snap, s.region, r)
+			}
+		}
+	}
+
+	go func() {
+		wg.Wait()
+		close(errc)
+	}()
+
+	for err := range errc {
+		if err != nil {
+			allErrors.Add(err)
+		}
+	}
+
+	if allErrors.Any() {
+		return gph, allErrors
+	}
+
+	return gph, nil
+}
+
+func (s *Cloudtrail) FetchByType(ctx context.Context, t string) (cloud.GraphAPI, error) {
+	defer s.fetcher.Reset()
+	return s.fetcher.FetchByType(context.WithValue(ctx, "region", s.region), t)
+}
+
+func (s *Cloudtrail) IsSyncDisabled() bool {
+	return !getBool(s.config, "aws.cloudtrail.sync", true)
 }

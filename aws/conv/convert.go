@@ -54,6 +54,7 @@ import (
 	autoscalingtypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	cloudformationtypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	cloudfronttypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	cloudtrailtypes "github.com/aws/aws-sdk-go-v2/service/cloudtrail/types"
 	cloudwatchtypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	cloudwatchlogstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -242,6 +243,9 @@ func InitResource(source interface{}) (*graph.Resource, error) {
 	// Cloudformation
 	case cloudformationtypes.Stack:
 		res = graph.InitResource(cloud.Stack, awssdk.ToString(ss.StackId))
+	// CloudTrail
+	case cloudtrailtypes.Trail:
+		res = graph.InitResource(cloud.Trail, awssdk.ToString(ss.TrailARN))
 	default:
 		return nil, fmt.Errorf("unknown type of resource %T", source)
 	}
