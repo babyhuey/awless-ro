@@ -55,11 +55,12 @@ type (
 	manualSnsAPI            interface{}
 )
 
-// autoscaling: the scaling activity tailer.
+// apigatewayv2: GetApis has no paginator in the SDK, so its fetcher pages by hand.
 type manualApigatewayv2API interface {
 	GetApis(context.Context, *apigatewayv2.GetApisInput, ...func(*apigatewayv2.Options)) (*apigatewayv2.GetApisOutput, error)
 }
 
+// autoscaling: the scaling activity tailer.
 type manualAutoscalingAPI interface {
 	DescribeScalingActivities(context.Context, *autoscaling.DescribeScalingActivitiesInput, ...func(*autoscaling.Options)) (*autoscaling.DescribeScalingActivitiesOutput, error)
 }

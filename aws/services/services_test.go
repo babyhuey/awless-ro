@@ -1270,9 +1270,6 @@ func TestBuildApigatewayv2Graph(t *testing.T) {
 	compareResources(t, g, resources, expected, expectedChildren, expectedAppliedOn)
 }
 
-// An install made before this service existed has no aws.apigatewayv2.sync key,
-// since config defaults are written on first install only. It must still read as
-// off there, the way it does on a fresh install.
 func TestBuildCdnGraph(t *testing.T) {
 	now := time.Now().UTC()
 	distributions := []cloudfronttypes.DistributionSummary{
