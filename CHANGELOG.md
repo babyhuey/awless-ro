@@ -9,9 +9,8 @@
 
 ### Fixed
 
-- A sync key missing from an older config now reads as its default. Defaults were
-  only written on first install, so on an install older than a key, a service that
-  is off by default (such as `aws.monitoring.sync`) synced anyway. (#79)
+- A `*.sync` setting missing from the config (e.g. after `config unset`) now uses its
+  documented default instead of on: off for monitoring, S3 objects and DNS records. (#79)
 
 ## v0.5.0
 
