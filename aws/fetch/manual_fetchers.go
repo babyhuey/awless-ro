@@ -882,6 +882,12 @@ func addManualEksFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 		var mu sync.Mutex
 		err := forEachParallel(ctx, names, func(ctx context.Context, name string) error {
 			out, err := conf.APIs.Eks.DescribeCluster(ctx, &eks.DescribeClusterInput{Name: awssdk.String(name)})
+			// A cluster can be deleted between listing and describing it; that
+			// is not a sync failure.
+			var notFound *ekstypes.ResourceNotFoundException
+			if errors.As(err, &notFound) {
+				return nil
+			}
 			if err != nil {
 				return err
 			}
