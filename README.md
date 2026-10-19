@@ -458,8 +458,11 @@ and skipped; the rest still land.
 -> storage: 7 buckets, s3objects: off (aws.storage.s3object.sync)
 ```
 
-Two resource types are off by default because they cost an API call per parent — one
-per bucket, one per hosted zone. The sync says so rather than reporting zero of them.
+Some of it is off by default. S3 objects and DNS records cost an API call per parent —
+one per bucket, one per hosted zone — and the sync says so rather than reporting zero
+of them. Monitoring (CloudWatch alarms, metrics and log groups), Secrets Manager and
+SSM Parameter Store are off as whole services; turn one on with
+`awless-ro config set aws.ssm.sync true`.
 
 You rarely need to run it by hand. `show` and `inspect` refresh the copy on their own
 for the services they touch, and changing region with `switch` syncs the new one
