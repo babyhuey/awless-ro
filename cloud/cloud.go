@@ -96,6 +96,8 @@ const (
 	Secret string = "secret"
 	//ssm
 	Parameter string = "parameter"
+	//dynamodb
+	Table string = "table"
 	//container
 	Repository        string = "repository"
 	Registry          string = "registry"

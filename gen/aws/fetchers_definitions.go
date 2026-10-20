@@ -348,4 +348,11 @@ var FetchersDefs = []FetchersDef{
 			{Api: "ssm", ResourceType: cloud.Parameter, AWSType: "ssmtypes.ParameterMetadata", ApiMethod: "DescribeParameters", InputFields: `MaxResults: new(int32(50))`, OutputsExtractor: "Parameters", Paginated: true},
 		},
 	},
+	{
+		Name: "dynamodb",
+		Api:  []string{"dynamodb"},
+		Fetchers: []Fetcher{
+			{Api: "dynamodb", ResourceType: cloud.Table, AWSType: "dynamodbtypes.TableDescription", ManualFetcher: true},
+		},
+	},
 }

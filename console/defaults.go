@@ -77,6 +77,7 @@ var ColumnsInListing = map[string][]string{
 	cloud.FileSystem:          {properties.ID, properties.Name, properties.State, properties.Size, properties.PerformanceMode, properties.ThroughputMode, properties.Encrypted, properties.Created},
 	cloud.Secret:              {properties.Name, properties.RotationEnabled, properties.Modified, properties.LastAccessed, properties.Created},
 	cloud.Parameter:           {properties.Name, properties.Type, properties.Tier, properties.Version, properties.Modified},
+	cloud.Table:               {properties.Name, properties.State, properties.ItemCount, properties.Size, properties.BillingMode, properties.Created},
 }
 
 var DefaultsColumnDefinitions = map[string][]ColumnDefinition{
@@ -540,5 +541,14 @@ var DefaultsColumnDefinitions = map[string][]ColumnDefinition{
 		StringColumnDefinition{Prop: properties.Tier},
 		StringColumnDefinition{Prop: properties.Version},
 		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.Modified}},
+	},
+	//DynamoDB
+	cloud.Table: {
+		StringColumnDefinition{Prop: properties.Name},
+		StringColumnDefinition{Prop: properties.State},
+		StringColumnDefinition{Prop: properties.ItemCount, Friendly: "Items"},
+		StorageColumnDefinition{Unit: b, StringColumnDefinition: StringColumnDefinition{Prop: properties.Size}},
+		StringColumnDefinition{Prop: properties.BillingMode, Friendly: "Billing"},
+		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.Created}},
 	},
 }

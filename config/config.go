@@ -56,6 +56,7 @@ var configDefinitions = map[string]*Definition{
 	"aws.efs.sync":              {help: "Enable/disable sync of EFS service (when empty: true)", defaultValue: "true", parseParamFn: parseBool},
 	"aws.secretsmanager.sync":   {help: "Sync Secrets Manager secrets (metadata only): off by default", defaultValue: "false", parseParamFn: parseBool},
 	"aws.ssm.sync":              {help: "Sync SSM parameter metadata: off by default, large in busy accounts", defaultValue: "false", parseParamFn: parseBool},
+	"aws.dynamodb.sync":         {help: "Enable/disable sync of DynamoDB service (when empty: true)", defaultValue: "true", parseParamFn: parseBool},
 }
 
 // defaultsDefinitions is empty: every entry it used to hold (instance.type,

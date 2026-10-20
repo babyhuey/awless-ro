@@ -162,6 +162,10 @@ func Parameter(id string) *rBuilder {
 	return new("parameter", id)
 }
 
+func Table(id string) *rBuilder {
+	return new("table", id)
+}
+
 func Image(id string) *rBuilder {
 	return new("image", id)
 }

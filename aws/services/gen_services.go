@@ -40,6 +40,8 @@ import (
 	cloudwatchtypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	cloudwatchlogstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	dynamodbtypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
@@ -93,6 +95,7 @@ var ServiceNames = []string{
 	"efs",
 	"secretsmanager",
 	"ssm",
+	"dynamodb",
 }
 
 var ResourceTypes = []string{
@@ -150,6 +153,7 @@ var ResourceTypes = []string{
 	"filesystem",
 	"secret",
 	"parameter",
+	"table",
 }
 
 var ServicePerAPI = map[string]string{
@@ -176,6 +180,7 @@ var ServicePerAPI = map[string]string{
 	"efs":            "efs",
 	"secretsmanager": "secretsmanager",
 	"ssm":            "ssm",
+	"dynamodb":       "dynamodb",
 }
 
 var ServicePerResourceType = map[string]string{
@@ -233,6 +238,7 @@ var ServicePerResourceType = map[string]string{
 	"filesystem":          "efs",
 	"secret":              "secretsmanager",
 	"parameter":           "ssm",
+	"table":               "dynamodb",
 }
 
 var APIPerResourceType = map[string]string{
@@ -290,6 +296,7 @@ var APIPerResourceType = map[string]string{
 	"filesystem":          "efs",
 	"secret":              "secretsmanager",
 	"parameter":           "ssm",
+	"table":               "dynamodb",
 }
 
 type Infra struct {
@@ -2844,4 +2851,128 @@ func (s *Ssm) FetchByType(ctx context.Context, t string) (cloud.GraphAPI, error)
 
 func (s *Ssm) IsSyncDisabled() bool {
 	return !getBool(s.config, "aws.ssm.sync", true)
+}
+
+type Dynamodb struct {
+	fetcher         fetch.Fetcher
+	region, profile string
+	config          map[string]interface{}
+	log             *logger.Logger
+	awsfetch.DynamodbAPI
+}
+
+func NewDynamodb(cfg awssdk.Config, profile string, extraConf map[string]interface{}, log *logger.Logger) cloud.Service {
+	region := cfg.Region
+	dynamodbAPI := dynamodb.NewFromConfig(cfg)
+
+	fetchConfig := awsfetch.NewConfig(&awsfetch.AWSAPI{
+		Dynamodb: dynamodbAPI,
+	})
+	fetchConfig.Extra = extraConf
+	fetchConfig.Log = log
+
+	return &Dynamodb{
+		DynamodbAPI: dynamodbAPI,
+		fetcher:     fetch.NewFetcher(awsfetch.BuildDynamodbFetchFuncs(fetchConfig)),
+		config:      extraConf,
+		region:      region,
+		profile:     profile,
+		log:         log,
+	}
+}
+
+func (s *Dynamodb) Name() string {
+	return "dynamodb"
+}
+
+func (s *Dynamodb) Region() string {
+	return s.region
+}
+
+func (s *Dynamodb) Profile() string {
+	return s.profile
+}
+
+func (s *Dynamodb) ResourceTypes() []string {
+	return []string{
+		"table",
+	}
+}
+
+func (s *Dynamodb) Fetch(ctx context.Context) (cloud.GraphAPI, error) {
+	if s.IsSyncDisabled() {
+		return graph.NewGraph(), nil
+	}
+
+	allErrors := new(fetch.Error)
+
+	gph, err := s.fetcher.Fetch(context.WithValue(ctx, "region", s.region))
+	defer s.fetcher.Reset()
+
+	for _, e := range *fetch.WrapError(err) {
+		switch {
+		case e == nil:
+			continue
+		case awsfetch.IsAccessDenied(e):
+			allErrors.Add(cloud.ErrFetchAccessDenied)
+		default:
+			allErrors.Add(e)
+		}
+	}
+
+	if err := gph.AddResource(graph.InitResource(cloud.Region, s.region)); err != nil {
+		return gph, err
+	}
+
+	snap := gph.AsRDFGraphSnaphot()
+
+	errc := make(chan error)
+	var wg sync.WaitGroup
+	if getBool(s.config, "aws.dynamodb.table.sync", true) {
+		list, err := s.fetcher.Get("table_objects")
+		if err != nil {
+			return gph, err
+		}
+		objects, ok := list.([]dynamodbtypes.TableDescription)
+		if !ok {
+			return gph, errors.New("cannot cast to '[]dynamodbtypes.TableDescription' type from fetch context")
+		}
+		for _, r := range objects {
+			for _, fn := range addParentsFns["table"] {
+				wg.Add(1)
+				go func(f addParentFn, snap triplestore.RDFGraph, region string, res dynamodbtypes.TableDescription) {
+					defer wg.Done()
+					if err := f(gph, snap, region, res); err != nil {
+						errc <- err
+					}
+				}(fn, snap, s.region, r)
+			}
+		}
+	}
+
+	go func() {
+		wg.Wait()
+		close(errc)
+	}()
+
+	for err := range errc {
+		if err != nil {
+			allErrors.Add(err)
+		}
+	}
+
+	if allErrors.Any() {
+		return gph, allErrors
+	}
+
+	return gph, nil
+}
+
+func (s *Dynamodb) FetchByType(ctx context.Context, t string) (cloud.GraphAPI, error) {
+	defer s.fetcher.Reset()
+	return s.fetcher.FetchByType(context.WithValue(ctx, "region", s.region), t)
+}
+
+func (s *Dynamodb) IsSyncDisabled() bool {
+	return !getBool(s.config, "aws.dynamodb.sync", true)
 }

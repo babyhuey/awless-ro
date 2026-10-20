@@ -1388,3 +1388,10 @@ func BuildSsmFetchFuncs(conf *Config) fetch.Funcs {
 	}
 	return funcs
 }
+
+func BuildDynamodbFetchFuncs(conf *Config) fetch.Funcs {
+	funcs := make(map[string]fetch.Func)
+
+	addManualDynamodbFetchFuncs(conf, funcs)
+	return funcs
+}
