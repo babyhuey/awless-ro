@@ -857,5 +857,9 @@ func addManualCloudformationFetchFuncs(conf *Config, funcs map[string]fetch.Func
 }
 func addManualCloudtrailFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 }
+func addManualEfsFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
+}
+func addManualSecretsmanagerFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
+}
 func addManualSsmFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 }

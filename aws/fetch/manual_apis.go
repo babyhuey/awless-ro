@@ -46,11 +46,13 @@ type (
 	manualCloudfrontAPI     interface{}
 	manualCloudwatchAPI     interface{}
 	manualCloudwatchlogsAPI interface{}
+	manualEfsAPI            interface{}
 	manualEc2API            interface{}
 	manualEcrAPI            interface{}
 	manualElbAPI            interface{}
 	manualLambdaAPI         interface{}
 	manualRdsAPI            interface{}
+	manualSecretsmanagerAPI interface{}
 	manualSnsAPI            interface{}
 	manualSsmAPI            interface{}
 )

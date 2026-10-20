@@ -43,6 +43,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	"github.com/aws/aws-sdk-go-v2/service/efs"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -50,6 +51,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
@@ -173,6 +175,16 @@ type generatedEcsAPI interface {
 	// no generated fetcher calls ecs directly
 }
 
+// EfsAPI is every efs operation awless-ro calls.
+type EfsAPI interface {
+	generatedEfsAPI
+	manualEfsAPI
+}
+
+type generatedEfsAPI interface {
+	DescribeFileSystems(context.Context, *efs.DescribeFileSystemsInput, ...func(*efs.Options)) (*efs.DescribeFileSystemsOutput, error)
+}
+
 // ElbAPI is every elasticloadbalancing operation awless-ro calls.
 type ElbAPI interface {
 	generatedElbAPI
@@ -246,6 +258,16 @@ type generatedS3API interface {
 	// no generated fetcher calls s3 directly
 }
 
+// SecretsmanagerAPI is every secretsmanager operation awless-ro calls.
+type SecretsmanagerAPI interface {
+	generatedSecretsmanagerAPI
+	manualSecretsmanagerAPI
+}
+
+type generatedSecretsmanagerAPI interface {
+	ListSecrets(context.Context, *secretsmanager.ListSecretsInput, ...func(*secretsmanager.Options)) (*secretsmanager.ListSecretsOutput, error)
+}
+
 // SnsAPI is every sns operation awless-ro calls.
 type SnsAPI interface {
 	generatedSnsAPI
@@ -298,6 +320,7 @@ var (
 	_ Ec2API            = (*ec2.Client)(nil)
 	_ EcrAPI            = (*ecr.Client)(nil)
 	_ EcsAPI            = (*ecs.Client)(nil)
+	_ EfsAPI            = (*efs.Client)(nil)
 	_ ElbAPI            = (*elasticloadbalancing.Client)(nil)
 	_ Elbv2API          = (*elasticloadbalancingv2.Client)(nil)
 	_ IamAPI            = (*iam.Client)(nil)
@@ -305,6 +328,7 @@ var (
 	_ RdsAPI            = (*rds.Client)(nil)
 	_ Route53API        = (*route53.Client)(nil)
 	_ S3API             = (*s3.Client)(nil)
+	_ SecretsmanagerAPI = (*secretsmanager.Client)(nil)
 	_ SnsAPI            = (*sns.Client)(nil)
 	_ SqsAPI            = (*sqs.Client)(nil)
 	_ SsmAPI            = (*ssm.Client)(nil)

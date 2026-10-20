@@ -565,6 +565,30 @@ var awsResourcesDef = map[string]map[string]*propertyTransform{
 		properties.OrganizationTrail: {name: "IsOrganizationTrail", transform: extractValueFn},
 		properties.LogFileValidation: {name: "LogFileValidationEnabled", transform: extractValueFn},
 	},
+	// EFS
+	cloud.FileSystem: {
+		properties.Arn:             {name: "FileSystemArn", transform: extractValueFn},
+		properties.Name:            {name: "Name", transform: extractValueFn},
+		properties.State:           {name: "LifeCycleState", transform: extractValueFn},
+		properties.Size:            {name: "SizeInBytes", transform: extractFieldFn("Value")},
+		properties.PerformanceMode: {name: "PerformanceMode", transform: extractValueFn},
+		properties.ThroughputMode:  {name: "ThroughputMode", transform: extractValueFn},
+		properties.Encrypted:       {name: "Encrypted", transform: extractValueFn},
+		properties.Created:         {name: "CreationTime", transform: extractTimeFn},
+		properties.Tags:            {name: "Tags", transform: extractTagsFn},
+	},
+	// Secrets Manager
+	cloud.Secret: {
+		properties.Arn:             {name: "ARN", transform: extractValueFn},
+		properties.Name:            {name: "Name", transform: extractValueFn},
+		properties.Description:     {name: "Description", transform: extractValueFn},
+		properties.RotationEnabled: {name: "RotationEnabled", transform: extractValueFn},
+		properties.LastRotated:     {name: "LastRotatedDate", transform: extractTimeFn},
+		properties.Modified:        {name: "LastChangedDate", transform: extractTimeFn},
+		properties.LastAccessed:    {name: "LastAccessedDate", transform: extractTimeFn},
+		properties.Created:         {name: "CreatedDate", transform: extractTimeFn},
+		properties.Tags:            {name: "Tags", transform: extractTagsFn},
+	},
 	// SSM
 	cloud.Parameter: {
 		properties.Arn:         {name: "ARN", transform: extractValueFn},

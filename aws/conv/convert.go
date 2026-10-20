@@ -60,6 +60,7 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	ecrtypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	ecstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	elbtypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	elbv2types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	iamtypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
@@ -67,6 +68,7 @@ import (
 	rdstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	route53types "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
+	secretsmanagertypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	snstypes "github.com/aws/aws-sdk-go-v2/service/sns/types"
 	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 
@@ -247,6 +249,12 @@ func InitResource(source interface{}) (*graph.Resource, error) {
 	// CloudTrail
 	case cloudtrailtypes.Trail:
 		res = graph.InitResource(cloud.Trail, awssdk.ToString(ss.TrailARN))
+	// EFS
+	case efstypes.FileSystemDescription:
+		res = graph.InitResource(cloud.FileSystem, awssdk.ToString(ss.FileSystemId))
+	// Secrets Manager
+	case secretsmanagertypes.SecretListEntry:
+		res = graph.InitResource(cloud.Secret, awssdk.ToString(ss.ARN))
 	// SSM
 	case ssmtypes.ParameterMetadata:
 		res = graph.InitResource(cloud.Parameter, awssdk.ToString(ss.ARN))
@@ -719,6 +727,14 @@ var extractTagsFn = func(i interface{}) (interface{}, error) {
 			out = append(out, fmt.Sprintf("%s=%s", awssdk.ToString(t.Key), awssdk.ToString(t.Value)))
 		}
 	case []iamtypes.Tag:
+		for _, t := range tags {
+			out = append(out, fmt.Sprintf("%s=%s", awssdk.ToString(t.Key), awssdk.ToString(t.Value)))
+		}
+	case []efstypes.Tag:
+		for _, t := range tags {
+			out = append(out, fmt.Sprintf("%s=%s", awssdk.ToString(t.Key), awssdk.ToString(t.Value)))
+		}
+	case []secretsmanagertypes.Tag:
 		for _, t := range tags {
 			out = append(out, fmt.Sprintf("%s=%s", awssdk.ToString(t.Key), awssdk.ToString(t.Value)))
 		}
