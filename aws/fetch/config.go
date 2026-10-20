@@ -33,6 +33,7 @@ type AWSAPI struct {
 	Ssm            SsmAPI
 	Dynamodb       DynamodbAPI
 	Eks            EksAPI
+	Apigatewayv2   Apigatewayv2API
 }
 
 type Config struct {

@@ -166,6 +166,10 @@ func Table(id string) *rBuilder {
 	return new("table", id)
 }
 
+func Api(id string) *rBuilder {
+	return new("api", id)
+}
+
 func Image(id string) *rBuilder {
 	return new("image", id)
 }

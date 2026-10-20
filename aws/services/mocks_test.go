@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	awssdk "github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
+	apigatewayv2types "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	dynamodbtypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
@@ -48,6 +50,10 @@ type (
 	manualSsmMock            struct{}
 	manualStsMock            struct{}
 )
+
+type manualApigatewayv2Mock struct {
+	apis []apigatewayv2types.Api
+}
 
 type manualElbv2Mock struct {
 	listeners                []elbv2types.Listener
@@ -94,6 +100,10 @@ type manualEcsMock struct {
 	tasksNames              map[string][]string
 	containerinstances      map[string][]ecstypes.ContainerInstance
 	containerinstancesNames map[string][]string
+}
+
+func (m *mockApigatewayv2) GetApis(_ context.Context, _ *apigatewayv2.GetApisInput, _ ...func(*apigatewayv2.Options)) (*apigatewayv2.GetApisOutput, error) {
+	return &apigatewayv2.GetApisOutput{Items: m.apis}, nil
 }
 
 func (m *mockElbv2) DescribeListeners(_ context.Context, input *elasticloadbalancingv2.DescribeListenersInput, _ ...func(*elasticloadbalancingv2.Options)) (*elasticloadbalancingv2.DescribeListenersOutput, error) {

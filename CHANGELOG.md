@@ -16,6 +16,8 @@
   (`aws.dynamodb.sync`). (#71)
 - `list eksclusters`: EKS clusters, in a new `eks` service synced by default
   (`aws.eks.sync`). (#72)
+- `list apis`: API Gateway v2 HTTP and WebSocket APIs, in a new `apigatewayv2` service
+  synced by default (`aws.apigatewayv2.sync`). (#76)
 
 ### Fixed
 

@@ -100,6 +100,8 @@ const (
 	Table string = "table"
 	//eks
 	EksCluster string = "ekscluster"
+	//apigatewayv2
+	Api string = "api"
 	//container
 	Repository        string = "repository"
 	Registry          string = "registry"

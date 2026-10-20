@@ -362,4 +362,11 @@ var FetchersDefs = []FetchersDef{
 			{Api: "eks", ResourceType: cloud.EksCluster, AWSType: "ekstypes.Cluster", ManualFetcher: true},
 		},
 	},
+	{
+		Name: "apigatewayv2",
+		Api:  []string{"apigatewayv2"},
+		Fetchers: []Fetcher{
+			{Api: "apigatewayv2", ResourceType: cloud.Api, AWSType: "apigatewayv2types.Api", ManualFetcher: true},
+		},
+	},
 }

@@ -1402,3 +1402,10 @@ func BuildEksFetchFuncs(conf *Config) fetch.Funcs {
 	addManualEksFetchFuncs(conf, funcs)
 	return funcs
 }
+
+func BuildApigatewayv2FetchFuncs(conf *Config) fetch.Funcs {
+	funcs := make(map[string]fetch.Func)
+
+	addManualApigatewayv2FetchFuncs(conf, funcs)
+	return funcs
+}

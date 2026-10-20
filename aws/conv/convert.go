@@ -52,6 +52,7 @@ import (
 
 	awssdk "github.com/aws/aws-sdk-go-v2/aws"
 	acmtypes "github.com/aws/aws-sdk-go-v2/service/acm/types"
+	apigatewayv2types "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	autoscalingtypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	cloudformationtypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	cloudfronttypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
@@ -267,6 +268,9 @@ func InitResource(source interface{}) (*graph.Resource, error) {
 	// EKS
 	case ekstypes.Cluster:
 		res = graph.InitResource(cloud.EksCluster, awssdk.ToString(ss.Arn))
+	// API Gateway v2
+	case apigatewayv2types.Api:
+		res = graph.InitResource(cloud.Api, awssdk.ToString(ss.ApiId))
 	default:
 		return nil, fmt.Errorf("unknown type of resource %T", source)
 	}

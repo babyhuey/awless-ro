@@ -27,6 +27,7 @@ package awsfetch
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -58,6 +59,11 @@ type (
 	manualSnsAPI            interface{}
 	manualSsmAPI            interface{}
 )
+
+// apigatewayv2: GetApis has no paginator in the SDK, so its fetcher pages by hand.
+type manualApigatewayv2API interface {
+	GetApis(context.Context, *apigatewayv2.GetApisInput, ...func(*apigatewayv2.Options)) (*apigatewayv2.GetApisOutput, error)
+}
 
 // autoscaling: the scaling activity tailer.
 type manualAutoscalingAPI interface {

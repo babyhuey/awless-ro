@@ -622,6 +622,15 @@ var awsResourcesDef = map[string]map[string]*propertyTransform{
 		properties.Created:         {name: "CreatedAt", transform: extractTimeFn},
 		properties.Tags:            {name: "Tags", transform: extractTagsFn},
 	},
+	// API Gateway v2
+	cloud.Api: {
+		properties.Name:        {name: "Name", transform: extractValueFn},
+		properties.Protocol:    {name: "ProtocolType", transform: extractValueFn},
+		properties.Endpoint:    {name: "ApiEndpoint", transform: extractValueFn},
+		properties.Description: {name: "Description", transform: extractValueFn},
+		properties.Created:     {name: "CreatedDate", transform: extractTimeFn},
+		properties.Tags:        {name: "Tags", transform: extractTagsFn},
+	},
 	//Queue
 	cloud.Queue: {}, //Manually set
 }

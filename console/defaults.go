@@ -79,6 +79,7 @@ var ColumnsInListing = map[string][]string{
 	cloud.Parameter:           {properties.Name, properties.Type, properties.Tier, properties.Version, properties.Modified},
 	cloud.Table:               {properties.Name, properties.State, properties.ItemCount, properties.Size, properties.BillingMode, properties.Created},
 	cloud.EksCluster:          {properties.Name, properties.State, properties.Version, properties.PlatformVersion, properties.Created},
+	cloud.Api:                 {properties.ID, properties.Name, properties.Protocol, properties.Endpoint, properties.Created},
 }
 
 var DefaultsColumnDefinitions = map[string][]ColumnDefinition{
@@ -558,6 +559,14 @@ var DefaultsColumnDefinitions = map[string][]ColumnDefinition{
 		StringColumnDefinition{Prop: properties.State},
 		StringColumnDefinition{Prop: properties.Version, Friendly: "Kubernetes"},
 		StringColumnDefinition{Prop: properties.PlatformVersion, Friendly: "Platform"},
+		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.Created}},
+	},
+	//API Gateway v2
+	cloud.Api: {
+		StringColumnDefinition{Prop: properties.ID},
+		StringColumnDefinition{Prop: properties.Name},
+		StringColumnDefinition{Prop: properties.Protocol},
+		StringColumnDefinition{Prop: properties.Endpoint},
 		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.Created}},
 	},
 }

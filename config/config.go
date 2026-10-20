@@ -58,6 +58,7 @@ var configDefinitions = map[string]*Definition{
 	"aws.ssm.sync":              {help: "Sync SSM parameter metadata: off by default, large in busy accounts", defaultValue: "false", parseParamFn: parseBool},
 	"aws.dynamodb.sync":         {help: "Enable/disable sync of DynamoDB service (when empty: true)", defaultValue: "true", parseParamFn: parseBool},
 	"aws.eks.sync":              {help: "Enable/disable sync of EKS service (when empty: true)", defaultValue: "true", parseParamFn: parseBool},
+	"aws.apigatewayv2.sync":     {help: "Enable/disable sync of API Gateway v2 service (when empty: true)", defaultValue: "true", parseParamFn: parseBool},
 }
 
 // defaultsDefinitions is empty: every entry it used to hold (instance.type,
