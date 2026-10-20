@@ -50,6 +50,8 @@ import (
 	ecstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	"github.com/aws/aws-sdk-go-v2/service/eks"
+	ekstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	elbtypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
@@ -96,6 +98,7 @@ var ServiceNames = []string{
 	"secretsmanager",
 	"ssm",
 	"dynamodb",
+	"eks",
 }
 
 var ResourceTypes = []string{
@@ -154,6 +157,7 @@ var ResourceTypes = []string{
 	"secret",
 	"parameter",
 	"table",
+	"ekscluster",
 }
 
 var ServicePerAPI = map[string]string{
@@ -181,6 +185,7 @@ var ServicePerAPI = map[string]string{
 	"secretsmanager": "secretsmanager",
 	"ssm":            "ssm",
 	"dynamodb":       "dynamodb",
+	"eks":            "eks",
 }
 
 var ServicePerResourceType = map[string]string{
@@ -239,6 +244,7 @@ var ServicePerResourceType = map[string]string{
 	"secret":              "secretsmanager",
 	"parameter":           "ssm",
 	"table":               "dynamodb",
+	"ekscluster":          "eks",
 }
 
 var APIPerResourceType = map[string]string{
@@ -297,6 +303,7 @@ var APIPerResourceType = map[string]string{
 	"secret":              "secretsmanager",
 	"parameter":           "ssm",
 	"table":               "dynamodb",
+	"ekscluster":          "eks",
 }
 
 type Infra struct {
@@ -2975,4 +2982,128 @@ func (s *Dynamodb) FetchByType(ctx context.Context, t string) (cloud.GraphAPI, e
 
 func (s *Dynamodb) IsSyncDisabled() bool {
 	return !getBool(s.config, "aws.dynamodb.sync", true)
+}
+
+type Eks struct {
+	fetcher         fetch.Fetcher
+	region, profile string
+	config          map[string]interface{}
+	log             *logger.Logger
+	awsfetch.EksAPI
+}
+
+func NewEks(cfg awssdk.Config, profile string, extraConf map[string]interface{}, log *logger.Logger) cloud.Service {
+	region := cfg.Region
+	eksAPI := eks.NewFromConfig(cfg)
+
+	fetchConfig := awsfetch.NewConfig(&awsfetch.AWSAPI{
+		Eks: eksAPI,
+	})
+	fetchConfig.Extra = extraConf
+	fetchConfig.Log = log
+
+	return &Eks{
+		EksAPI:  eksAPI,
+		fetcher: fetch.NewFetcher(awsfetch.BuildEksFetchFuncs(fetchConfig)),
+		config:  extraConf,
+		region:  region,
+		profile: profile,
+		log:     log,
+	}
+}
+
+func (s *Eks) Name() string {
+	return "eks"
+}
+
+func (s *Eks) Region() string {
+	return s.region
+}
+
+func (s *Eks) Profile() string {
+	return s.profile
+}
+
+func (s *Eks) ResourceTypes() []string {
+	return []string{
+		"ekscluster",
+	}
+}
+
+func (s *Eks) Fetch(ctx context.Context) (cloud.GraphAPI, error) {
+	if s.IsSyncDisabled() {
+		return graph.NewGraph(), nil
+	}
+
+	allErrors := new(fetch.Error)
+
+	gph, err := s.fetcher.Fetch(context.WithValue(ctx, "region", s.region))
+	defer s.fetcher.Reset()
+
+	for _, e := range *fetch.WrapError(err) {
+		switch {
+		case e == nil:
+			continue
+		case awsfetch.IsAccessDenied(e):
+			allErrors.Add(cloud.ErrFetchAccessDenied)
+		default:
+			allErrors.Add(e)
+		}
+	}
+
+	if err := gph.AddResource(graph.InitResource(cloud.Region, s.region)); err != nil {
+		return gph, err
+	}
+
+	snap := gph.AsRDFGraphSnaphot()
+
+	errc := make(chan error)
+	var wg sync.WaitGroup
+	if getBool(s.config, "aws.eks.ekscluster.sync", true) {
+		list, err := s.fetcher.Get("ekscluster_objects")
+		if err != nil {
+			return gph, err
+		}
+		objects, ok := list.([]ekstypes.Cluster)
+		if !ok {
+			return gph, errors.New("cannot cast to '[]ekstypes.Cluster' type from fetch context")
+		}
+		for _, r := range objects {
+			for _, fn := range addParentsFns["ekscluster"] {
+				wg.Add(1)
+				go func(f addParentFn, snap triplestore.RDFGraph, region string, res ekstypes.Cluster) {
+					defer wg.Done()
+					if err := f(gph, snap, region, res); err != nil {
+						errc <- err
+					}
+				}(fn, snap, s.region, r)
+			}
+		}
+	}
+
+	go func() {
+		wg.Wait()
+		close(errc)
+	}()
+
+	for err := range errc {
+		if err != nil {
+			allErrors.Add(err)
+		}
+	}
+
+	if allErrors.Any() {
+		return gph, allErrors
+	}
+
+	return gph, nil
+}
+
+func (s *Eks) FetchByType(ctx context.Context, t string) (cloud.GraphAPI, error) {
+	defer s.fetcher.Reset()
+	return s.fetcher.FetchByType(context.WithValue(ctx, "region", s.region), t)
+}
+
+func (s *Eks) IsSyncDisabled() bool {
+	return !getBool(s.config, "aws.eks.sync", true)
 }

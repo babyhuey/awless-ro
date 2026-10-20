@@ -45,6 +45,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
+	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -196,6 +197,16 @@ type generatedEfsAPI interface {
 	DescribeFileSystems(context.Context, *efs.DescribeFileSystemsInput, ...func(*efs.Options)) (*efs.DescribeFileSystemsOutput, error)
 }
 
+// EksAPI is every eks operation awless-ro calls.
+type EksAPI interface {
+	generatedEksAPI
+	manualEksAPI
+}
+
+type generatedEksAPI interface {
+	// no generated fetcher calls eks directly
+}
+
 // ElbAPI is every elasticloadbalancing operation awless-ro calls.
 type ElbAPI interface {
 	generatedElbAPI
@@ -333,6 +344,7 @@ var (
 	_ EcrAPI            = (*ecr.Client)(nil)
 	_ EcsAPI            = (*ecs.Client)(nil)
 	_ EfsAPI            = (*efs.Client)(nil)
+	_ EksAPI            = (*eks.Client)(nil)
 	_ ElbAPI            = (*elasticloadbalancing.Client)(nil)
 	_ Elbv2API          = (*elasticloadbalancingv2.Client)(nil)
 	_ IamAPI            = (*iam.Client)(nil)

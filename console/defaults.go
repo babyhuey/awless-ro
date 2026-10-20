@@ -78,6 +78,7 @@ var ColumnsInListing = map[string][]string{
 	cloud.Secret:              {properties.Name, properties.RotationEnabled, properties.Modified, properties.LastAccessed, properties.Created},
 	cloud.Parameter:           {properties.Name, properties.Type, properties.Tier, properties.Version, properties.Modified},
 	cloud.Table:               {properties.Name, properties.State, properties.ItemCount, properties.Size, properties.BillingMode, properties.Created},
+	cloud.EksCluster:          {properties.Name, properties.State, properties.Version, properties.PlatformVersion, properties.Created},
 }
 
 var DefaultsColumnDefinitions = map[string][]ColumnDefinition{
@@ -549,6 +550,14 @@ var DefaultsColumnDefinitions = map[string][]ColumnDefinition{
 		StringColumnDefinition{Prop: properties.ItemCount, Friendly: "Items"},
 		StorageColumnDefinition{Unit: b, StringColumnDefinition: StringColumnDefinition{Prop: properties.Size}},
 		StringColumnDefinition{Prop: properties.BillingMode, Friendly: "Billing"},
+		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.Created}},
+	},
+	//EKS
+	cloud.EksCluster: {
+		StringColumnDefinition{Prop: properties.Name},
+		StringColumnDefinition{Prop: properties.State},
+		StringColumnDefinition{Prop: properties.Version, Friendly: "Kubernetes"},
+		StringColumnDefinition{Prop: properties.PlatformVersion, Friendly: "Platform"},
 		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.Created}},
 	},
 }

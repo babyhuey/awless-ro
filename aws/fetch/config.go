@@ -32,6 +32,7 @@ type AWSAPI struct {
 	Secretsmanager SecretsmanagerAPI
 	Ssm            SsmAPI
 	Dynamodb       DynamodbAPI
+	Eks            EksAPI
 }
 
 type Config struct {

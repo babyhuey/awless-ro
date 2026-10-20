@@ -14,6 +14,8 @@
   new `ssm` service off by default in `sync` (`aws.ssm.sync`). (#75)
 - `list tables`: DynamoDB tables, in a new `dynamodb` service synced by default
   (`aws.dynamodb.sync`). (#71)
+- `list eksclusters`: EKS clusters, in a new `eks` service synced by default
+  (`aws.eks.sync`). (#72)
 
 ### Fixed
 

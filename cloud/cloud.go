@@ -98,6 +98,8 @@ const (
 	Parameter string = "parameter"
 	//dynamodb
 	Table string = "table"
+	//eks
+	EksCluster string = "ekscluster"
 	//container
 	Repository        string = "repository"
 	Registry          string = "registry"

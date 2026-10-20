@@ -9,6 +9,8 @@ import (
 	dynamodbtypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	ecstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	"github.com/aws/aws-sdk-go-v2/service/eks"
+	ekstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	elbv2types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -74,6 +76,10 @@ type manualS3Mock struct {
 
 type manualDynamodbMock struct {
 	tables []dynamodbtypes.TableDescription
+}
+
+type manualEksMock struct {
+	clusters []ekstypes.Cluster
 }
 
 type manualSqsMock struct {
@@ -179,6 +185,23 @@ func (m *mockDynamodb) DescribeTable(_ context.Context, input *dynamodb.Describe
 		}
 	}
 	return nil, &dynamodbtypes.ResourceNotFoundException{Message: input.TableName}
+}
+
+func (m *mockEks) ListClusters(_ context.Context, _ *eks.ListClustersInput, _ ...func(*eks.Options)) (*eks.ListClustersOutput, error) {
+	var names []string
+	for _, c := range m.clusters {
+		names = append(names, awssdk.ToString(c.Name))
+	}
+	return &eks.ListClustersOutput{Clusters: names}, nil
+}
+
+func (m *mockEks) DescribeCluster(_ context.Context, input *eks.DescribeClusterInput, _ ...func(*eks.Options)) (*eks.DescribeClusterOutput, error) {
+	for _, c := range m.clusters {
+		if awssdk.ToString(c.Name) == awssdk.ToString(input.Name) {
+			return &eks.DescribeClusterOutput{Cluster: &c}, nil
+		}
+	}
+	return nil, fmt.Errorf("cluster %q not found", awssdk.ToString(input.Name))
 }
 
 func (m *mockEcs) ListClusters(_ context.Context, _ *ecs.ListClustersInput, _ ...func(*ecs.Options)) (*ecs.ListClustersOutput, error) {

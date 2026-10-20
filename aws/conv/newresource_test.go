@@ -51,6 +51,7 @@ import (
 	ecrtypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	ecstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	ekstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	elbtypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	elbv2types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	iamtypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
@@ -240,6 +241,11 @@ var sdkPrototypes = map[string][]func() interface{}{
 	// DynamoDB
 	cloud.Table: {func() interface{} {
 		return dynamodbtypes.TableDescription{TableArn: awssdk.String("arn:aws:dynamodb:table/1")}
+	}},
+
+	// EKS
+	cloud.EksCluster: {func() interface{} {
+		return ekstypes.Cluster{Arn: awssdk.String("arn:aws:eks:cluster/1")}
 	}},
 }
 

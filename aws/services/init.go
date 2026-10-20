@@ -27,7 +27,7 @@ import (
 )
 
 var (
-	AccessService, InfraService, StorageService, MessagingService, DnsService, LambdaService, MonitoringService, CdnService, CloudformationService, CloudtrailService, EfsService, SecretsmanagerService, SsmService, DynamodbService cloud.Service
+	AccessService, InfraService, StorageService, MessagingService, DnsService, LambdaService, MonitoringService, CdnService, CloudformationService, CloudtrailService, EfsService, SecretsmanagerService, SsmService, DynamodbService, EksService cloud.Service
 )
 
 // Init builds every service client from one resolved AWS config.
@@ -72,6 +72,7 @@ func Init(profile string, profileExplicit bool, region string, extraConf map[str
 	SecretsmanagerService = NewSecretsmanager(cfg, profile, extraConf, log)
 	SsmService = NewSsm(cfg, profile, extraConf, log)
 	DynamodbService = NewDynamodb(cfg, profile, extraConf, log)
+	EksService = NewEks(cfg, profile, extraConf, log)
 
 	cloud.ServiceRegistry[InfraService.Name()] = InfraService
 	cloud.ServiceRegistry[AccessService.Name()] = AccessService
@@ -87,6 +88,7 @@ func Init(profile string, profileExplicit bool, region string, extraConf map[str
 	cloud.ServiceRegistry[SecretsmanagerService.Name()] = SecretsmanagerService
 	cloud.ServiceRegistry[SsmService.Name()] = SsmService
 	cloud.ServiceRegistry[DynamodbService.Name()] = DynamodbService
+	cloud.ServiceRegistry[EksService.Name()] = EksService
 
 	return nil
 }

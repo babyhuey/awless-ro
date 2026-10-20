@@ -169,6 +169,7 @@ const (
 	PendingTasksCount                 = "PendingTasksCount"
 	PerformanceMode                   = "PerformanceMode"
 	PlacementGroup                    = "PlacementGroup"
+	PlatformVersion                   = "PlatformVersion"
 	Port                              = "Port"
 	Ports                             = "Ports"
 	PortRange                         = "PortRange"

@@ -611,6 +611,17 @@ var awsResourcesDef = map[string]map[string]*propertyTransform{
 		properties.BillingMode: {fetch: fetchBillingModeFn},
 		properties.Created:     {name: "CreationDateTime", transform: extractTimeFn},
 	},
+	// EKS
+	cloud.EksCluster: {
+		properties.Arn:             {name: "Arn", transform: extractValueFn},
+		properties.Name:            {name: "Name", transform: extractValueFn},
+		properties.State:           {name: "Status", transform: extractValueFn},
+		properties.Version:         {name: "Version", transform: extractValueFn},
+		properties.PlatformVersion: {name: "PlatformVersion", transform: extractValueFn},
+		properties.Endpoint:        {name: "Endpoint", transform: extractValueFn},
+		properties.Created:         {name: "CreatedAt", transform: extractTimeFn},
+		properties.Tags:            {name: "Tags", transform: extractTagsFn},
+	},
 	//Queue
 	cloud.Queue: {}, //Manually set
 }

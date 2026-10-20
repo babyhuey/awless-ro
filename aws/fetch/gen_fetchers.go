@@ -1395,3 +1395,10 @@ func BuildDynamodbFetchFuncs(conf *Config) fetch.Funcs {
 	addManualDynamodbFetchFuncs(conf, funcs)
 	return funcs
 }
+
+func BuildEksFetchFuncs(conf *Config) fetch.Funcs {
+	funcs := make(map[string]fetch.Func)
+
+	addManualEksFetchFuncs(conf, funcs)
+	return funcs
+}

@@ -355,4 +355,11 @@ var FetchersDefs = []FetchersDef{
 			{Api: "dynamodb", ResourceType: cloud.Table, AWSType: "dynamodbtypes.TableDescription", ManualFetcher: true},
 		},
 	},
+	{
+		Name: "eks",
+		Api:  []string{"eks"},
+		Fetchers: []Fetcher{
+			{Api: "eks", ResourceType: cloud.EksCluster, AWSType: "ekstypes.Cluster", ManualFetcher: true},
+		},
+	},
 }
