@@ -76,6 +76,20 @@ func (h StringColumnDefinition) title(suffix ...string) string {
 	return t
 }
 
+// FallbackColumnDefinition prints Fallback for a resource without the property,
+// where a missing value has a meaning of its own.
+type FallbackColumnDefinition struct {
+	StringColumnDefinition
+	Fallback string
+}
+
+func (h FallbackColumnDefinition) format(i interface{}) string {
+	if i == nil {
+		return h.Fallback
+	}
+	return h.StringColumnDefinition.format(i)
+}
+
 type ColoredValueColumnDefinition struct {
 	StringColumnDefinition
 	ColoredValues map[string]color.Attribute

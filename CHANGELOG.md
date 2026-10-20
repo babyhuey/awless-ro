@@ -19,6 +19,10 @@
 - `list apis`: API Gateway v2 HTTP and WebSocket APIs, in a new `apigatewayv2` service
   synced by default (`aws.apigatewayv2.sync`). (#76)
 
+### Changed
+
+- `list loggroups` shows `never` for a group with no retention set, as the console does. (#83)
+
 ### Fixed
 
 - A `*.sync` setting missing from the config (e.g. after `config unset`) now uses its
