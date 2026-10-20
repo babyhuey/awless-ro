@@ -150,6 +150,22 @@ func Trail(id string) *rBuilder {
 	return new("trail", id)
 }
 
+func FileSystem(id string) *rBuilder {
+	return new("filesystem", id)
+}
+
+func Secret(id string) *rBuilder {
+	return new("secret", id)
+}
+
+func Parameter(id string) *rBuilder {
+	return new("parameter", id)
+}
+
+func Table(id string) *rBuilder {
+	return new("table", id)
+}
+
 func Api(id string) *rBuilder {
 	return new("api", id)
 }
@@ -172,6 +188,10 @@ func Repository(id string) *rBuilder {
 
 func ContainerCluster(id string) *rBuilder {
 	return new("containercluster", id)
+}
+
+func EksCluster(id string) *rBuilder {
+	return new("ekscluster", id)
 }
 
 func ContainerTask(id string) *rBuilder {

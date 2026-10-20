@@ -35,16 +35,21 @@ import (
 	cloudtrailtypes "github.com/aws/aws-sdk-go-v2/service/cloudtrail/types"
 	cloudwatchtypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	cloudwatchlogstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	dynamodbtypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	ecrtypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	ecstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	ekstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	elbtypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	elbv2types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	iamtypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	lambdatypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	route53types "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
+	secretsmanagertypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	snstypes "github.com/aws/aws-sdk-go-v2/service/sns/types"
+	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	awsconv "github.com/theazz/awless-ro/aws/conv"
 	"github.com/theazz/awless-ro/aws/fetch"
 	"github.com/theazz/awless-ro/cloud"
@@ -1217,6 +1222,259 @@ func TestBuildCloudtrailGraph(t *testing.T) {
 
 	expectedChildren := map[string][]string{
 		"eu-west-1": {"trail_1", "trail_2"},
+	}
+	expectedAppliedOn := map[string][]string{}
+
+	compareResources(t, g, resources, expected, expectedChildren, expectedAppliedOn)
+}
+
+func TestBuildEfsGraph(t *testing.T) {
+	created := time.Now().UTC().Truncate(time.Second)
+	filesystems := []efstypes.FileSystemDescription{
+		{FileSystemId: awssdk.String("fs_1"), LifeCycleState: efstypes.LifeCycleStateCreating},
+		{
+			FileSystemId:    awssdk.String("fs_2"),
+			FileSystemArn:   awssdk.String("arn:aws:elasticfilesystem:eu-west-1:1:file-system/fs_2"),
+			Name:            awssdk.String("shared-home"),
+			LifeCycleState:  efstypes.LifeCycleStateAvailable,
+			SizeInBytes:     &efstypes.FileSystemSize{Value: 6144},
+			PerformanceMode: efstypes.PerformanceModeGeneralPurpose,
+			ThroughputMode:  efstypes.ThroughputModeElastic,
+			Encrypted:       awssdk.Bool(true),
+			CreationTime:    awssdk.Time(created),
+			Tags:            []efstypes.Tag{{Key: awssdk.String("Name"), Value: awssdk.String("shared-home")}},
+		},
+	}
+
+	mock := &mockEfs{filesystemdescriptions: filesystems}
+
+	service := Efs{
+		EfsAPI: mock, region: "eu-west-1",
+		fetcher: fetch.NewFetcher(awsfetch.BuildEfsFetchFuncs(awsfetch.NewConfig(&awsfetch.AWSAPI{Efs: mock}))),
+	}
+
+	g, err := service.Fetch(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resources, err := g.Find(cloud.NewQuery("filesystem"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := map[string]cloud.Resource{
+		"fs_1": resourcetest.FileSystem("fs_1").Prop(p.State, "creating").Build(),
+		"fs_2": resourcetest.FileSystem("fs_2").Prop(p.Arn, "arn:aws:elasticfilesystem:eu-west-1:1:file-system/fs_2").Prop(p.Name, "shared-home").
+			Prop(p.State, "available").Prop(p.Size, 6144).Prop(p.PerformanceMode, "generalPurpose").Prop(p.ThroughputMode, "elastic").
+			Prop(p.Encrypted, true).Prop(p.Created, created).Prop(p.Tags, []string{"Name=shared-home"}).Build(),
+	}
+
+	expectedChildren := map[string][]string{
+		"eu-west-1": {"fs_1", "fs_2"},
+	}
+	expectedAppliedOn := map[string][]string{}
+
+	compareResources(t, g, resources, expected, expectedChildren, expectedAppliedOn)
+}
+
+func TestBuildSecretsmanagerGraph(t *testing.T) {
+	created := time.Now().UTC().Truncate(time.Second)
+	changed := created.Add(time.Hour)
+	accessed := created.Add(24 * time.Hour)
+	rotated := created.Add(2 * time.Hour)
+	secrets := []secretsmanagertypes.SecretListEntry{
+		{ARN: awssdk.String("secret_1"), Name: awssdk.String("app/db")},
+		{
+			ARN:              awssdk.String("secret_2"),
+			Name:             awssdk.String("app/api-key"),
+			Description:      awssdk.String("third-party API key"),
+			RotationEnabled:  awssdk.Bool(true),
+			LastRotatedDate:  awssdk.Time(rotated),
+			LastChangedDate:  awssdk.Time(changed),
+			LastAccessedDate: awssdk.Time(accessed),
+			CreatedDate:      awssdk.Time(created),
+			Tags:             []secretsmanagertypes.Tag{{Key: awssdk.String("team"), Value: awssdk.String("payments")}},
+		},
+	}
+
+	mock := &mockSecretsmanager{secretlistentrys: secrets}
+
+	service := Secretsmanager{
+		SecretsmanagerAPI: mock, region: "eu-west-1",
+		fetcher: fetch.NewFetcher(awsfetch.BuildSecretsmanagerFetchFuncs(awsfetch.NewConfig(&awsfetch.AWSAPI{Secretsmanager: mock}))),
+	}
+
+	g, err := service.Fetch(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resources, err := g.Find(cloud.NewQuery("secret"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := map[string]cloud.Resource{
+		"secret_1": resourcetest.Secret("secret_1").Prop(p.Arn, "secret_1").Prop(p.Name, "app/db").Build(),
+		"secret_2": resourcetest.Secret("secret_2").Prop(p.Arn, "secret_2").Prop(p.Name, "app/api-key").Prop(p.Description, "third-party API key").
+			Prop(p.RotationEnabled, true).Prop(p.LastRotated, rotated).Prop(p.Modified, changed).Prop(p.LastAccessed, accessed).
+			Prop(p.Created, created).Prop(p.Tags, []string{"team=payments"}).Build(),
+	}
+
+	expectedChildren := map[string][]string{
+		"eu-west-1": {"secret_1", "secret_2"},
+	}
+	expectedAppliedOn := map[string][]string{}
+
+	compareResources(t, g, resources, expected, expectedChildren, expectedAppliedOn)
+}
+
+func TestBuildSsmGraph(t *testing.T) {
+	modified := time.Now().UTC().Truncate(time.Second)
+	parameters := []ssmtypes.ParameterMetadata{
+		{ARN: awssdk.String("param_1"), Name: awssdk.String("/app/region"), Type: ssmtypes.ParameterTypeString, Tier: ssmtypes.ParameterTierStandard, Version: 1},
+		{
+			ARN:              awssdk.String("param_2"),
+			Name:             awssdk.String("/app/db/password"),
+			Type:             ssmtypes.ParameterTypeSecureString,
+			Tier:             ssmtypes.ParameterTierAdvanced,
+			Version:          7,
+			Description:      awssdk.String("database password"),
+			KeyId:            awssdk.String("alias/aws/ssm"),
+			LastModifiedDate: awssdk.Time(modified),
+			LastModifiedUser: awssdk.String("arn:aws:iam::1:user/ops"),
+		},
+	}
+
+	mock := &mockSsm{parametermetadatas: parameters}
+
+	service := Ssm{
+		SsmAPI: mock, region: "eu-west-1", config: map[string]interface{}{"aws.ssm.sync": true},
+		fetcher: fetch.NewFetcher(awsfetch.BuildSsmFetchFuncs(awsfetch.NewConfig(&awsfetch.AWSAPI{Ssm: mock}))),
+	}
+
+	g, err := service.Fetch(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resources, err := g.Find(cloud.NewQuery("parameter"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := map[string]cloud.Resource{
+		"param_1": resourcetest.Parameter("param_1").Prop(p.Arn, "param_1").Prop(p.Name, "/app/region").Prop(p.Type, "String").
+			Prop(p.Tier, "Standard").Prop(p.Version, "1").Build(),
+		"param_2": resourcetest.Parameter("param_2").Prop(p.Arn, "param_2").Prop(p.Name, "/app/db/password").Prop(p.Type, "SecureString").
+			Prop(p.Tier, "Advanced").Prop(p.Version, "7").Prop(p.Description, "database password").Prop(p.KMSKey, "alias/aws/ssm").
+			Prop(p.Modified, modified).Prop(p.ModifiedBy, "arn:aws:iam::1:user/ops").Build(),
+	}
+
+	expectedChildren := map[string][]string{
+		"eu-west-1": {"param_1", "param_2"},
+	}
+	expectedAppliedOn := map[string][]string{}
+
+	compareResources(t, g, resources, expected, expectedChildren, expectedAppliedOn)
+}
+
+func TestBuildDynamodbGraph(t *testing.T) {
+	created := time.Date(2024, time.February, 14, 16, 20, 52, 0, time.UTC)
+	tables := []dynamodbtypes.TableDescription{
+		{
+			TableArn:           awssdk.String("table_1"),
+			TableName:          awssdk.String("sessions"),
+			TableStatus:        dynamodbtypes.TableStatusActive,
+			ItemCount:          awssdk.Int64(1200),
+			TableSizeBytes:     awssdk.Int64(48000),
+			BillingModeSummary: &dynamodbtypes.BillingModeSummary{BillingMode: dynamodbtypes.BillingModePayPerRequest},
+			CreationDateTime:   &created,
+		},
+		{
+			TableArn:       awssdk.String("table_2"),
+			TableName:      awssdk.String("locks"),
+			TableStatus:    dynamodbtypes.TableStatusUpdating,
+			ItemCount:      awssdk.Int64(0),
+			TableSizeBytes: awssdk.Int64(0),
+		},
+	}
+
+	mock := &mockDynamodb{manualDynamodbMock: manualDynamodbMock{tables: tables}}
+
+	service := Dynamodb{
+		DynamodbAPI: mock, region: "eu-west-1",
+		fetcher: fetch.NewFetcher(awsfetch.BuildDynamodbFetchFuncs(awsfetch.NewConfig(&awsfetch.AWSAPI{Dynamodb: mock}))),
+	}
+
+	g, err := service.Fetch(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resources, err := g.Find(cloud.NewQuery("table"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := map[string]cloud.Resource{
+		"table_1": resourcetest.Table("table_1").Prop(p.Arn, "table_1").Prop(p.Name, "sessions").Prop(p.State, "ACTIVE").
+			Prop(p.ItemCount, 1200).Prop(p.Size, 48000).Prop(p.BillingMode, "PAY_PER_REQUEST").Prop(p.Created, created).Build(),
+		"table_2": resourcetest.Table("table_2").Prop(p.Arn, "table_2").Prop(p.Name, "locks").Prop(p.State, "UPDATING").
+			Prop(p.ItemCount, 0).Prop(p.Size, 0).Prop(p.BillingMode, "PROVISIONED").Build(),
+	}
+
+	expectedChildren := map[string][]string{
+		"eu-west-1": {"table_1", "table_2"},
+	}
+	expectedAppliedOn := map[string][]string{}
+
+	compareResources(t, g, resources, expected, expectedChildren, expectedAppliedOn)
+}
+
+func TestBuildEksGraph(t *testing.T) {
+	created := time.Now().UTC().Truncate(time.Second)
+	clusters := []ekstypes.Cluster{
+		{Arn: awssdk.String("cluster_1"), Name: awssdk.String("staging"), Status: ekstypes.ClusterStatusCreating},
+		{
+			Arn:             awssdk.String("cluster_2"),
+			Name:            awssdk.String("prod"),
+			Status:          ekstypes.ClusterStatusActive,
+			Version:         awssdk.String("1.33"),
+			PlatformVersion: awssdk.String("eks.9"),
+			Endpoint:        awssdk.String("https://ABC.gr7.eu-west-1.eks.amazonaws.com"),
+			CreatedAt:       awssdk.Time(created),
+			Tags:            map[string]string{"team": "platform", "env": "prod"},
+		},
+	}
+
+	mock := &mockEks{manualEksMock: manualEksMock{clusters: clusters}}
+
+	service := Eks{
+		EksAPI: mock, region: "eu-west-1",
+		fetcher: fetch.NewFetcher(awsfetch.BuildEksFetchFuncs(awsfetch.NewConfig(&awsfetch.AWSAPI{Eks: mock}))),
+	}
+
+	g, err := service.Fetch(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resources, err := g.Find(cloud.NewQuery("ekscluster"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := map[string]cloud.Resource{
+		"cluster_1": resourcetest.EksCluster("cluster_1").Prop(p.Arn, "cluster_1").Prop(p.Name, "staging").Prop(p.State, "CREATING").Build(),
+		"cluster_2": resourcetest.EksCluster("cluster_2").Prop(p.Arn, "cluster_2").Prop(p.Name, "prod").Prop(p.State, "ACTIVE").
+			Prop(p.Version, "1.33").Prop(p.PlatformVersion, "eks.9").Prop(p.Endpoint, "https://ABC.gr7.eu-west-1.eks.amazonaws.com").
+			Prop(p.Created, created).Prop(p.Tags, []string{"env=prod", "team=platform"}).Build(),
+	}
+
+	expectedChildren := map[string][]string{
+		"eu-west-1": {"cluster_1", "cluster_2"},
 	}
 	expectedAppliedOn := map[string][]string{}
 

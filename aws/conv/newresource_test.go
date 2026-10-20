@@ -47,9 +47,12 @@ import (
 	cloudtrailtypes "github.com/aws/aws-sdk-go-v2/service/cloudtrail/types"
 	cloudwatchtypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	cloudwatchlogstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	dynamodbtypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	ecrtypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	ecstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	ekstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	elbtypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	elbv2types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	iamtypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
@@ -57,7 +60,9 @@ import (
 	rdstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	route53types "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
+	secretsmanagertypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	snstypes "github.com/aws/aws-sdk-go-v2/service/sns/types"
+	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 
 	"github.com/theazz/awless-ro/cloud"
 )
@@ -217,6 +222,31 @@ var sdkPrototypes = map[string][]func() interface{}{
 	// CloudTrail
 	cloud.Trail: {func() interface{} {
 		return cloudtrailtypes.Trail{TrailARN: awssdk.String("arn:aws:cloudtrail:trail/1")}
+	}},
+
+	// EFS
+	cloud.FileSystem: {func() interface{} {
+		return efstypes.FileSystemDescription{FileSystemId: awssdk.String("fs-1")}
+	}},
+
+	// Secrets Manager
+	cloud.Secret: {func() interface{} {
+		return secretsmanagertypes.SecretListEntry{ARN: awssdk.String("arn:aws:secretsmanager:secret/1")}
+	}},
+
+	// SSM
+	cloud.Parameter: {func() interface{} {
+		return ssmtypes.ParameterMetadata{ARN: awssdk.String("arn:aws:ssm:parameter/1")}
+	}},
+
+	// DynamoDB
+	cloud.Table: {func() interface{} {
+		return dynamodbtypes.TableDescription{TableArn: awssdk.String("arn:aws:dynamodb:table/1")}
+	}},
+
+	// EKS
+	cloud.EksCluster: {func() interface{} {
+		return ekstypes.Cluster{Arn: awssdk.String("arn:aws:eks:cluster/1")}
 	}},
 
 	// API Gateway v2
