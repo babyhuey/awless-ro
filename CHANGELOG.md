@@ -9,6 +9,11 @@
 - `list filesystems`: EFS file systems, in a new `efs` service synced by default
   (`aws.efs.sync`). (#70)
 
+### Fixed
+
+- A `*.sync` setting missing from the config (e.g. after `config unset`) now uses its
+  documented default instead of on: off for monitoring, S3 objects and DNS records. (#79)
+
 ## v0.5.0
 
 **Breaking:** `switch` with `-p` or `-r` now exits 1 without saving anything. Pass the
