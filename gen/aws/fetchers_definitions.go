@@ -328,6 +328,27 @@ var FetchersDefs = []FetchersDef{
 		},
 	},
 	{
+		Name: "efs",
+		Api:  []string{"efs"},
+		Fetchers: []Fetcher{
+			{Api: "efs", ResourceType: cloud.FileSystem, AWSType: "efstypes.FileSystemDescription", ApiMethod: "DescribeFileSystems", OutputsExtractor: "FileSystems", Paginated: true},
+		},
+	},
+	{
+		Name: "secretsmanager",
+		Api:  []string{"secretsmanager"},
+		Fetchers: []Fetcher{
+			{Api: "secretsmanager", ResourceType: cloud.Secret, AWSType: "secretsmanagertypes.SecretListEntry", ApiMethod: "ListSecrets", OutputsExtractor: "SecretList", Paginated: true},
+		},
+	},
+	{
+		Name: "ssm",
+		Api:  []string{"ssm"},
+		Fetchers: []Fetcher{
+			{Api: "ssm", ResourceType: cloud.Parameter, AWSType: "ssmtypes.ParameterMetadata", ApiMethod: "DescribeParameters", InputFields: `MaxResults: new(int32(50))`, OutputsExtractor: "Parameters", Paginated: true},
+		},
+	},
+	{
 		Name: "dynamodb",
 		Api:  []string{"dynamodb"},
 		Fetchers: []Fetcher{

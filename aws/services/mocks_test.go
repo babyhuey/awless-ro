@@ -37,10 +37,13 @@ type (
 	manualCloudwatchlogsMock struct{}
 	manualEc2Mock            struct{}
 	manualEcrMock            struct{}
+	manualEfsMock            struct{}
 	manualElbMock            struct{}
 	manualLambdaMock         struct{}
 	manualRdsMock            struct{}
+	manualSecretsmanagerMock struct{}
 	manualSnsMock            struct{}
+	manualSsmMock            struct{}
 	manualStsMock            struct{}
 )
 

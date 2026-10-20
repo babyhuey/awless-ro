@@ -54,6 +54,8 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	ecrtypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
+	"github.com/aws/aws-sdk-go-v2/service/efs"
+	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	elbtypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
@@ -66,8 +68,12 @@ import (
 	rdstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	route53types "github.com/aws/aws-sdk-go-v2/service/route53/types"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	secretsmanagertypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	snstypes "github.com/aws/aws-sdk-go-v2/service/sns/types"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 
 	"github.com/theazz/awless-ro/aws/fetch"
 	"github.com/theazz/awless-ro/cloud"
@@ -445,6 +451,33 @@ func (m *mockEcs) FetchByType(context.Context, string) (cloud.GraphAPI, error) {
 	return nil, nil
 }
 
+type mockEfs struct {
+	awsfetch.EfsAPI
+	manualEfsMock
+	filesystemdescriptions []efstypes.FileSystemDescription
+}
+
+// cloud.Service, so that a mock can stand in for a whole service in the
+// registry. The graph-building tests drive the fetchers directly, so these are
+// inert on purpose.
+func (m *mockEfs) Name() string            { return "" }
+func (m *mockEfs) Region() string          { return "" }
+func (m *mockEfs) Profile() string         { return "" }
+func (m *mockEfs) ResourceTypes() []string { return []string{} }
+func (m *mockEfs) IsSyncDisabled() bool    { return false }
+
+func (m *mockEfs) Fetch(context.Context) (cloud.GraphAPI, error) {
+	return nil, nil
+}
+
+func (m *mockEfs) FetchByType(context.Context, string) (cloud.GraphAPI, error) {
+	return nil, nil
+}
+
+func (m *mockEfs) DescribeFileSystems(_ context.Context, _ *efs.DescribeFileSystemsInput, _ ...func(*efs.Options)) (*efs.DescribeFileSystemsOutput, error) {
+	return &efs.DescribeFileSystemsOutput{FileSystems: m.filesystemdescriptions}, nil
+}
+
 type mockElb struct {
 	awsfetch.ElbAPI
 	manualElbMock
@@ -644,6 +677,33 @@ func (m *mockS3) FetchByType(context.Context, string) (cloud.GraphAPI, error) {
 	return nil, nil
 }
 
+type mockSecretsmanager struct {
+	awsfetch.SecretsmanagerAPI
+	manualSecretsmanagerMock
+	secretlistentrys []secretsmanagertypes.SecretListEntry
+}
+
+// cloud.Service, so that a mock can stand in for a whole service in the
+// registry. The graph-building tests drive the fetchers directly, so these are
+// inert on purpose.
+func (m *mockSecretsmanager) Name() string            { return "" }
+func (m *mockSecretsmanager) Region() string          { return "" }
+func (m *mockSecretsmanager) Profile() string         { return "" }
+func (m *mockSecretsmanager) ResourceTypes() []string { return []string{} }
+func (m *mockSecretsmanager) IsSyncDisabled() bool    { return false }
+
+func (m *mockSecretsmanager) Fetch(context.Context) (cloud.GraphAPI, error) {
+	return nil, nil
+}
+
+func (m *mockSecretsmanager) FetchByType(context.Context, string) (cloud.GraphAPI, error) {
+	return nil, nil
+}
+
+func (m *mockSecretsmanager) ListSecrets(_ context.Context, _ *secretsmanager.ListSecretsInput, _ ...func(*secretsmanager.Options)) (*secretsmanager.ListSecretsOutput, error) {
+	return &secretsmanager.ListSecretsOutput{SecretList: m.secretlistentrys}, nil
+}
+
 type mockSns struct {
 	awsfetch.SnsAPI
 	manualSnsMock
@@ -696,6 +756,33 @@ func (m *mockSqs) Fetch(context.Context) (cloud.GraphAPI, error) {
 
 func (m *mockSqs) FetchByType(context.Context, string) (cloud.GraphAPI, error) {
 	return nil, nil
+}
+
+type mockSsm struct {
+	awsfetch.SsmAPI
+	manualSsmMock
+	parametermetadatas []ssmtypes.ParameterMetadata
+}
+
+// cloud.Service, so that a mock can stand in for a whole service in the
+// registry. The graph-building tests drive the fetchers directly, so these are
+// inert on purpose.
+func (m *mockSsm) Name() string            { return "" }
+func (m *mockSsm) Region() string          { return "" }
+func (m *mockSsm) Profile() string         { return "" }
+func (m *mockSsm) ResourceTypes() []string { return []string{} }
+func (m *mockSsm) IsSyncDisabled() bool    { return false }
+
+func (m *mockSsm) Fetch(context.Context) (cloud.GraphAPI, error) {
+	return nil, nil
+}
+
+func (m *mockSsm) FetchByType(context.Context, string) (cloud.GraphAPI, error) {
+	return nil, nil
+}
+
+func (m *mockSsm) DescribeParameters(_ context.Context, _ *ssm.DescribeParametersInput, _ ...func(*ssm.Options)) (*ssm.DescribeParametersOutput, error) {
+	return &ssm.DescribeParametersOutput{Parameters: m.parametermetadatas}, nil
 }
 
 type mockSts struct {
