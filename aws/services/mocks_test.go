@@ -41,6 +41,7 @@ type (
 	manualRdsMock            struct{}
 	manualSecretsmanagerMock struct{}
 	manualSnsMock            struct{}
+	manualSsmMock            struct{}
 	manualStsMock            struct{}
 )
 

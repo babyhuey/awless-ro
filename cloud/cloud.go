@@ -94,6 +94,8 @@ const (
 	FileSystem string = "filesystem"
 	//secretsmanager
 	Secret string = "secret"
+	//ssm
+	Parameter string = "parameter"
 	//container
 	Repository        string = "repository"
 	Registry          string = "registry"

@@ -10,6 +10,8 @@
   (`aws.efs.sync`). (#70)
 - `list secrets`: Secrets Manager secrets, metadata only (never their values), in a new
   `secretsmanager` service that is not synced by default (`aws.secretsmanager.sync`). (#74)
+- `list parameters`: SSM Parameter Store parameters, metadata only (never values), in a
+  new `ssm` service off by default in `sync` (`aws.ssm.sync`). (#75)
 
 ### Fixed
 

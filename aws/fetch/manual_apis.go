@@ -54,6 +54,7 @@ type (
 	manualRdsAPI            interface{}
 	manualSecretsmanagerAPI interface{}
 	manualSnsAPI            interface{}
+	manualSsmAPI            interface{}
 )
 
 // autoscaling: the scaling activity tailer.

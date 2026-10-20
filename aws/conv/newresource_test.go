@@ -59,6 +59,7 @@ import (
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	secretsmanagertypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	snstypes "github.com/aws/aws-sdk-go-v2/service/sns/types"
+	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 
 	"github.com/theazz/awless-ro/cloud"
 )
@@ -228,6 +229,11 @@ var sdkPrototypes = map[string][]func() interface{}{
 	// Secrets Manager
 	cloud.Secret: {func() interface{} {
 		return secretsmanagertypes.SecretListEntry{ARN: awssdk.String("arn:aws:secretsmanager:secret/1")}
+	}},
+
+	// SSM
+	cloud.Parameter: {func() interface{} {
+		return ssmtypes.ParameterMetadata{ARN: awssdk.String("arn:aws:ssm:parameter/1")}
 	}},
 }
 

@@ -30,6 +30,7 @@ type AWSAPI struct {
 	Cloudtrail     CloudtrailAPI
 	Efs            EfsAPI
 	Secretsmanager SecretsmanagerAPI
+	Ssm            SsmAPI
 }
 
 type Config struct {

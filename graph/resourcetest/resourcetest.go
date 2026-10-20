@@ -158,6 +158,10 @@ func Secret(id string) *rBuilder {
 	return new("secret", id)
 }
 
+func Parameter(id string) *rBuilder {
+	return new("parameter", id)
+}
+
 func Image(id string) *rBuilder {
 	return new("image", id)
 }

@@ -70,6 +70,7 @@ import (
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	secretsmanagertypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	snstypes "github.com/aws/aws-sdk-go-v2/service/sns/types"
+	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 
 	"github.com/theazz/awless-ro/cloud"
 	"github.com/theazz/awless-ro/cloud/properties"
@@ -254,6 +255,9 @@ func InitResource(source interface{}) (*graph.Resource, error) {
 	// Secrets Manager
 	case secretsmanagertypes.SecretListEntry:
 		res = graph.InitResource(cloud.Secret, awssdk.ToString(ss.ARN))
+	// SSM
+	case ssmtypes.ParameterMetadata:
+		res = graph.InitResource(cloud.Parameter, awssdk.ToString(ss.ARN))
 	default:
 		return nil, fmt.Errorf("unknown type of resource %T", source)
 	}

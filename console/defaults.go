@@ -76,6 +76,7 @@ var ColumnsInListing = map[string][]string{
 	cloud.Trail:               {properties.Name, properties.Bucket, properties.MultiRegion, properties.OrganizationTrail, properties.LogFileValidation},
 	cloud.FileSystem:          {properties.ID, properties.Name, properties.State, properties.Size, properties.PerformanceMode, properties.ThroughputMode, properties.Encrypted, properties.Created},
 	cloud.Secret:              {properties.Name, properties.RotationEnabled, properties.Modified, properties.LastAccessed, properties.Created},
+	cloud.Parameter:           {properties.Name, properties.Type, properties.Tier, properties.Version, properties.Modified},
 }
 
 var DefaultsColumnDefinitions = map[string][]ColumnDefinition{
@@ -531,5 +532,13 @@ var DefaultsColumnDefinitions = map[string][]ColumnDefinition{
 		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.Modified, Friendly: "Last changed"}},
 		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.LastAccessed, Friendly: "Last accessed"}},
 		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.Created}},
+	},
+	//SSM
+	cloud.Parameter: {
+		StringColumnDefinition{Prop: properties.Name},
+		StringColumnDefinition{Prop: properties.Type},
+		StringColumnDefinition{Prop: properties.Tier},
+		StringColumnDefinition{Prop: properties.Version},
+		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.Modified}},
 	},
 }

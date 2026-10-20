@@ -341,4 +341,11 @@ var FetchersDefs = []FetchersDef{
 			{Api: "secretsmanager", ResourceType: cloud.Secret, AWSType: "secretsmanagertypes.SecretListEntry", ApiMethod: "ListSecrets", OutputsExtractor: "SecretList", Paginated: true},
 		},
 	},
+	{
+		Name: "ssm",
+		Api:  []string{"ssm"},
+		Fetchers: []Fetcher{
+			{Api: "ssm", ResourceType: cloud.Parameter, AWSType: "ssmtypes.ParameterMetadata", ApiMethod: "DescribeParameters", InputFields: `MaxResults: new(int32(50))`, OutputsExtractor: "Parameters", Paginated: true},
+		},
+	},
 }

@@ -125,6 +125,7 @@ const (
 	Key                               = "cloud:key"
 	KeyName                           = "cloud:keyName"
 	KeyPair                           = "cloud:keyPair"
+	KMSKey                            = "cloud:kmsKey"
 	LastAccessed                      = "cloud:lastAccessed"
 	LastRotated                       = "cloud:lastRotated"
 	LatestRestorableTime              = "cloud:latestRestorableTime"
@@ -143,6 +144,7 @@ const (
 	MetricName                        = "cloud:metricName"
 	MinSize                           = "cloud:minSize"
 	Modified                          = "cloud:modified"
+	ModifiedBy                        = "cloud:modifiedBy"
 	MonitoringInterval                = "cloud:monitoringInterval"
 	MonitoringRole                    = "cloud:monitoringRole"
 	MultiAZ                           = "cloud:multiAZ"
@@ -217,6 +219,7 @@ const (
 	Tags                              = "cloud:tags"
 	TargetGroups                      = "cloud:targetGroups"
 	ThroughputMode                    = "cloud:throughputMode"
+	Tier                              = "cloud:tier"
 	Timeout                           = "cloud:timezone"
 	Timezone                          = "cloud:timeout"
 	TLSVersionRequired                = "cloud:tlsVersionRequired"
@@ -348,6 +351,7 @@ func init() {
 		properties.Key:                               Key,
 		properties.KeyName:                           KeyName,
 		properties.KeyPair:                           KeyPair,
+		properties.KMSKey:                            KMSKey,
 		properties.LastAccessed:                      LastAccessed,
 		properties.LastRotated:                       LastRotated,
 		properties.LatestRestorableTime:              LatestRestorableTime,
@@ -366,6 +370,7 @@ func init() {
 		properties.MetricName:                        MetricName,
 		properties.MinSize:                           MinSize,
 		properties.Modified:                          Modified,
+		properties.ModifiedBy:                        ModifiedBy,
 		properties.MonitoringInterval:                MonitoringInterval,
 		properties.MonitoringRole:                    MonitoringRole,
 		properties.MultiAZ:                           MultiAZ,
@@ -440,6 +445,7 @@ func init() {
 		properties.Tags:                              Tags,
 		properties.TargetGroups:                      TargetGroups,
 		properties.ThroughputMode:                    ThroughputMode,
+		properties.Tier:                              Tier,
 		properties.Timeout:                           Timeout,
 		properties.Timezone:                          Timezone,
 		properties.TLSVersionRequired:                TLSVersionRequired,
@@ -571,6 +577,7 @@ var Properties = RDFProperties{
 	Key:                               {ID: Key, RdfType: "rdf:Property", RdfsLabel: "Key", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	KeyName:                           {ID: KeyName, RdfType: "rdf:Property", RdfsLabel: "KeyName", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	KeyPair:                           {ID: KeyPair, RdfType: "rdf:Property", RdfsLabel: "KeyPair", RdfsDefinedBy: "rdfs:Class", RdfsDataType: "xsd:string"},
+	KMSKey:                            {ID: KMSKey, RdfType: "rdf:Property", RdfsLabel: "KMSKey", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	LastAccessed:                      {ID: LastAccessed, RdfType: "rdf:Property", RdfsLabel: "LastAccessed", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:dateTime"},
 	LastRotated:                       {ID: LastRotated, RdfType: "rdf:Property", RdfsLabel: "LastRotated", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:dateTime"},
 	LatestRestorableTime:              {ID: LatestRestorableTime, RdfType: "rdf:Property", RdfsLabel: "LatestRestorableTime", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:dateTime"},
@@ -589,6 +596,7 @@ var Properties = RDFProperties{
 	MetricName:                        {ID: MetricName, RdfType: "rdf:Property", RdfsLabel: "MetricName", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	MinSize:                           {ID: MinSize, RdfType: "rdf:Property", RdfsLabel: "MinSize", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:int"},
 	Modified:                          {ID: Modified, RdfType: "rdf:Property", RdfsLabel: "Modified", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:dateTime"},
+	ModifiedBy:                        {ID: ModifiedBy, RdfType: "rdf:Property", RdfsLabel: "ModifiedBy", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	MonitoringInterval:                {ID: MonitoringInterval, RdfType: "rdf:Property", RdfsLabel: "MonitoringInterval", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	MonitoringRole:                    {ID: MonitoringRole, RdfType: "rdf:Property", RdfsLabel: "MonitoringRole", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	MultiAZ:                           {ID: MultiAZ, RdfType: "rdf:Property", RdfsLabel: "MultiAZ", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
@@ -663,6 +671,7 @@ var Properties = RDFProperties{
 	Tags:                              {ID: Tags, RdfType: "rdf:Property", RdfsLabel: "Tags", RdfsDefinedBy: "rdfs:list", RdfsDataType: "xsd:string"},
 	TargetGroups:                      {ID: TargetGroups, RdfType: "rdf:Property", RdfsLabel: "TargetGroups", RdfsDefinedBy: "rdfs:list", RdfsDataType: "xsd:string"},
 	ThroughputMode:                    {ID: ThroughputMode, RdfType: "rdf:Property", RdfsLabel: "ThroughputMode", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
+	Tier:                              {ID: Tier, RdfType: "rdf:Property", RdfsLabel: "Tier", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	Timeout:                           {ID: Timeout, RdfType: "rdf:Property", RdfsLabel: "Timeout", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:int"},
 	Timezone:                          {ID: Timezone, RdfType: "rdf:Property", RdfsLabel: "Timezone", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	TLSVersionRequired:                {ID: TLSVersionRequired, RdfType: "rdf:Property", RdfsLabel: "TLSVersionRequired", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
