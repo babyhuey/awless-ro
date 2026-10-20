@@ -1276,6 +1276,48 @@ func TestBuildKmsGraph(t *testing.T) {
 	compareResources(t, g, resources, expected, expectedChildren, expectedAppliedOn)
 }
 
+func TestBuildKmsGraphDeniedAndDeletedKeys(t *testing.T) {
+	keys := []kmstypes.KeyMetadata{
+		{KeyId: awssdk.String("key_1"), KeyState: kmstypes.KeyStateEnabled},
+		{KeyId: awssdk.String("key_2"), Arn: awssdk.String("arn:aws:kms:eu-west-1:1:key/key_2"), KeyState: kmstypes.KeyStateEnabled},
+	}
+	aliases := []kmstypes.AliasListEntry{
+		{AliasName: awssdk.String("alias/locked"), TargetKeyId: awssdk.String("key_2")},
+	}
+	deleted := []kmstypes.KeyListEntry{
+		{KeyId: awssdk.String("key_3"), KeyArn: awssdk.String("arn:aws:kms:eu-west-1:1:key/key_3")},
+	}
+
+	mock := &mockKms{manualKmsMock: manualKmsMock{keys: keys, aliases: aliases, denied: map[string]bool{"key_2": true}, deleted: deleted}}
+
+	service := Kms{
+		KmsAPI: mock, region: "eu-west-1",
+		fetcher: fetch.NewFetcher(awsfetch.BuildKmsFetchFuncs(awsfetch.NewConfig(&awsfetch.AWSAPI{Kms: mock}))),
+	}
+
+	g, err := service.Fetch(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resources, err := g.Find(cloud.NewQuery("kmskey"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := map[string]cloud.Resource{
+		"key_1": resourcetest.KmsKey("key_1").Prop(p.State, "Enabled").Build(),
+		"key_2": resourcetest.KmsKey("key_2").Prop(p.Arn, "arn:aws:kms:eu-west-1:1:key/key_2").Prop(p.Name, "alias/locked").Build(),
+	}
+
+	expectedChildren := map[string][]string{
+		"eu-west-1": {"key_1", "key_2"},
+	}
+	expectedAppliedOn := map[string][]string{}
+
+	compareResources(t, g, resources, expected, expectedChildren, expectedAppliedOn)
+}
+
 func TestBuildCdnGraph(t *testing.T) {
 	now := time.Now().UTC()
 	distributions := []cloudfronttypes.DistributionSummary{

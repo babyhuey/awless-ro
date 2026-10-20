@@ -904,13 +904,25 @@ func addManualKmsFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 		var mu sync.Mutex
 		err := forEachParallel(ctx, keys, func(ctx context.Context, k kmstypes.KeyListEntry) error {
 			out, err := conf.APIs.Kms.DescribeKey(ctx, &kms.DescribeKeyInput{KeyId: k.KeyId})
-			if err != nil {
-				return err
-			}
-			if out.KeyMetadata == nil {
+			var meta kmstypes.KeyMetadata
+			// A key can finish deleting between listing and describing it; that
+			// is not a sync failure. A key policy can deny DescribeKey on a single
+			// key to a role that may list them all; that key keeps what ListKeys
+			// returned.
+			var notFound *kmstypes.NotFoundException
+			switch {
+			case errors.As(err, &notFound):
 				return nil
+			case IsAccessDenied(err):
+				meta = kmstypes.KeyMetadata{KeyId: k.KeyId, Arn: k.KeyArn}
+			case err != nil:
+				return err
+			case out.KeyMetadata == nil:
+				return nil
+			default:
+				meta = *out.KeyMetadata
 			}
-			res, err := awsconv.NewResource(*out.KeyMetadata)
+			res, err := awsconv.NewResource(meta)
 			if err != nil {
 				return err
 			}
@@ -918,7 +930,7 @@ func addManualKmsFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 				res.Properties()[properties.Name] = alias
 			}
 			mu.Lock()
-			objects = append(objects, *out.KeyMetadata)
+			objects = append(objects, meta)
 			resources = append(resources, res)
 			mu.Unlock()
 			return nil
