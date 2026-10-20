@@ -7,6 +7,11 @@
 - `list trails`: CloudTrail trails, each in its home region only, in a new `cloudtrail`
   service synced by default (`aws.cloudtrail.sync`). (#65)
 
+### Fixed
+
+- A `*.sync` setting missing from the config (e.g. after `config unset`) now uses its
+  documented default instead of on: off for monitoring, S3 objects and DNS records. (#79)
+
 ## v0.5.0
 
 **Breaking:** `switch` with `-p` or `-r` now exits 1 without saving anything. Pass the
