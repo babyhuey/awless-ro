@@ -150,6 +150,10 @@ func Trail(id string) *rBuilder {
 	return new("trail", id)
 }
 
+func FileSystem(id string) *rBuilder {
+	return new("filesystem", id)
+}
+
 func Secret(id string) *rBuilder {
 	return new("secret", id)
 }

@@ -90,6 +90,8 @@ const (
 	Stack string = "stack"
 	//cloudtrail
 	Trail string = "trail"
+	//efs
+	FileSystem string = "filesystem"
 	//secretsmanager
 	Secret string = "secret"
 	//container
