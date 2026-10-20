@@ -74,6 +74,10 @@ var ColumnsInListing = map[string][]string{
 	cloud.Distribution:        {properties.ID, properties.PublicDNS, properties.Enabled, properties.State, properties.Modified, properties.Aliases, properties.SSLSupportMethod, properties.Origins},
 	cloud.Stack:               {properties.ID, properties.Name, properties.State, properties.Created, properties.Modified},
 	cloud.Trail:               {properties.Name, properties.Bucket, properties.MultiRegion, properties.OrganizationTrail, properties.LogFileValidation},
+	cloud.FileSystem:          {properties.ID, properties.Name, properties.State, properties.Size, properties.PerformanceMode, properties.ThroughputMode, properties.Encrypted, properties.Created},
+	cloud.Secret:              {properties.Name, properties.RotationEnabled, properties.Modified, properties.LastAccessed, properties.Created},
+	cloud.Parameter:           {properties.Name, properties.Type, properties.Tier, properties.Version, properties.Modified},
+	cloud.Table:               {properties.Name, properties.State, properties.ItemCount, properties.Size, properties.BillingMode, properties.Created},
 	cloud.EksCluster:          {properties.Name, properties.State, properties.Version, properties.PlatformVersion, properties.Created},
 }
 
@@ -511,6 +515,42 @@ var DefaultsColumnDefinitions = map[string][]ColumnDefinition{
 		StringColumnDefinition{Prop: properties.MultiRegion, Friendly: "Multi-region"},
 		StringColumnDefinition{Prop: properties.OrganizationTrail, Friendly: "Organization"},
 		StringColumnDefinition{Prop: properties.LogFileValidation, Friendly: "Log file validation"},
+	},
+	//EFS
+	cloud.FileSystem: {
+		StringColumnDefinition{Prop: properties.ID},
+		StringColumnDefinition{Prop: properties.Name},
+		StringColumnDefinition{Prop: properties.State},
+		StorageColumnDefinition{Unit: b, StringColumnDefinition: StringColumnDefinition{Prop: properties.Size}},
+		StringColumnDefinition{Prop: properties.PerformanceMode, Friendly: "Performance"},
+		StringColumnDefinition{Prop: properties.ThroughputMode, Friendly: "Throughput"},
+		StringColumnDefinition{Prop: properties.Encrypted},
+		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.Created}},
+	},
+	//Secrets Manager
+	cloud.Secret: {
+		StringColumnDefinition{Prop: properties.Name},
+		StringColumnDefinition{Prop: properties.RotationEnabled, Friendly: "Rotation"},
+		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.Modified, Friendly: "Last changed"}},
+		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.LastAccessed, Friendly: "Last accessed"}},
+		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.Created}},
+	},
+	//SSM
+	cloud.Parameter: {
+		StringColumnDefinition{Prop: properties.Name},
+		StringColumnDefinition{Prop: properties.Type},
+		StringColumnDefinition{Prop: properties.Tier},
+		StringColumnDefinition{Prop: properties.Version},
+		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.Modified}},
+	},
+	//DynamoDB
+	cloud.Table: {
+		StringColumnDefinition{Prop: properties.Name},
+		StringColumnDefinition{Prop: properties.State},
+		StringColumnDefinition{Prop: properties.ItemCount, Friendly: "Items"},
+		StorageColumnDefinition{Unit: b, StringColumnDefinition: StringColumnDefinition{Prop: properties.Size}},
+		StringColumnDefinition{Prop: properties.BillingMode, Friendly: "Billing"},
+		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.Created}},
 	},
 	//EKS
 	cloud.EksCluster: {

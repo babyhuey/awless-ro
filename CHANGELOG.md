@@ -6,8 +6,21 @@
 
 - `list trails`: CloudTrail trails, each in its home region only, in a new `cloudtrail`
   service synced by default (`aws.cloudtrail.sync`). (#65)
+- `list filesystems`: EFS file systems, in a new `efs` service synced by default
+  (`aws.efs.sync`). (#70)
+- `list secrets`: Secrets Manager secrets, metadata only (never their values), in a new
+  `secretsmanager` service that is not synced by default (`aws.secretsmanager.sync`). (#74)
+- `list parameters`: SSM Parameter Store parameters, metadata only (never values), in a
+  new `ssm` service off by default in `sync` (`aws.ssm.sync`). (#75)
+- `list tables`: DynamoDB tables, in a new `dynamodb` service synced by default
+  (`aws.dynamodb.sync`). (#71)
 - `list eksclusters`: EKS clusters, in a new `eks` service synced by default
   (`aws.eks.sync`). (#72)
+
+### Fixed
+
+- A `*.sync` setting missing from the config (e.g. after `config unset`) now uses its
+  documented default instead of on: off for monitoring, S3 objects and DNS records. (#79)
 
 ## v0.5.0
 

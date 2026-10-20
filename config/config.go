@@ -53,6 +53,10 @@ var configDefinitions = map[string]*Definition{
 	"aws.cdn.sync":              {help: "Enable/disable sync of CloudFront service (when empty: true)", defaultValue: "true", parseParamFn: parseBool},
 	"aws.cloudformation.sync":   {help: "Enable/disable sync of CloudFormation service (when empty: true)", defaultValue: "true", parseParamFn: parseBool},
 	"aws.cloudtrail.sync":       {help: "Enable/disable sync of CloudTrail service (when empty: true)", defaultValue: "true", parseParamFn: parseBool},
+	"aws.efs.sync":              {help: "Enable/disable sync of EFS service (when empty: true)", defaultValue: "true", parseParamFn: parseBool},
+	"aws.secretsmanager.sync":   {help: "Sync Secrets Manager secrets (metadata only): off by default", defaultValue: "false", parseParamFn: parseBool},
+	"aws.ssm.sync":              {help: "Sync SSM parameter metadata: off by default, large in busy accounts", defaultValue: "false", parseParamFn: parseBool},
+	"aws.dynamodb.sync":         {help: "Enable/disable sync of DynamoDB service (when empty: true)", defaultValue: "true", parseParamFn: parseBool},
 	"aws.eks.sync":              {help: "Enable/disable sync of EKS service (when empty: true)", defaultValue: "true", parseParamFn: parseBool},
 }
 
@@ -97,8 +101,28 @@ func LoadConfig() error {
 		}
 		return
 	})
+	if err != nil {
+		return err
+	}
 
-	return err
+	fillMissingSyncDefaults()
+	return nil
+}
+
+// fillMissingSyncDefaults gives every sync key the stored config lacks its
+// declared default, in memory only. Defaults are written to the database on first
+// install, so a sync key added in a later release is missing from every older
+// install, and a missing sync key reads as on: a service that is off by default
+// would sync there anyway.
+func fillMissingSyncDefaults() {
+	for key, def := range configDefinitions {
+		if _, ok := Config[key]; ok || !strings.HasSuffix(key, ".sync") || def.parseParamFn == nil {
+			continue
+		}
+		if v, err := def.parseParamFn(def.defaultValue); err == nil {
+			Config[key] = v
+		}
+	}
 }
 
 func DisplayConfig() string {

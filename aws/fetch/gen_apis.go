@@ -40,9 +40,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	"github.com/aws/aws-sdk-go-v2/service/efs"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
@@ -51,8 +53,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 )
 
@@ -129,6 +133,16 @@ type generatedCloudwatchlogsAPI interface {
 	DescribeLogGroups(context.Context, *cloudwatchlogs.DescribeLogGroupsInput, ...func(*cloudwatchlogs.Options)) (*cloudwatchlogs.DescribeLogGroupsOutput, error)
 }
 
+// DynamodbAPI is every dynamodb operation awless-ro calls.
+type DynamodbAPI interface {
+	generatedDynamodbAPI
+	manualDynamodbAPI
+}
+
+type generatedDynamodbAPI interface {
+	// no generated fetcher calls dynamodb directly
+}
+
 // Ec2API is every ec2 operation awless-ro calls.
 type Ec2API interface {
 	generatedEc2API
@@ -171,6 +185,16 @@ type EcsAPI interface {
 
 type generatedEcsAPI interface {
 	// no generated fetcher calls ecs directly
+}
+
+// EfsAPI is every efs operation awless-ro calls.
+type EfsAPI interface {
+	generatedEfsAPI
+	manualEfsAPI
+}
+
+type generatedEfsAPI interface {
+	DescribeFileSystems(context.Context, *efs.DescribeFileSystemsInput, ...func(*efs.Options)) (*efs.DescribeFileSystemsOutput, error)
 }
 
 // EksAPI is every eks operation awless-ro calls.
@@ -256,6 +280,16 @@ type generatedS3API interface {
 	// no generated fetcher calls s3 directly
 }
 
+// SecretsmanagerAPI is every secretsmanager operation awless-ro calls.
+type SecretsmanagerAPI interface {
+	generatedSecretsmanagerAPI
+	manualSecretsmanagerAPI
+}
+
+type generatedSecretsmanagerAPI interface {
+	ListSecrets(context.Context, *secretsmanager.ListSecretsInput, ...func(*secretsmanager.Options)) (*secretsmanager.ListSecretsOutput, error)
+}
+
 // SnsAPI is every sns operation awless-ro calls.
 type SnsAPI interface {
 	generatedSnsAPI
@@ -277,6 +311,16 @@ type generatedSqsAPI interface {
 	// no generated fetcher calls sqs directly
 }
 
+// SsmAPI is every ssm operation awless-ro calls.
+type SsmAPI interface {
+	generatedSsmAPI
+	manualSsmAPI
+}
+
+type generatedSsmAPI interface {
+	DescribeParameters(context.Context, *ssm.DescribeParametersInput, ...func(*ssm.Options)) (*ssm.DescribeParametersOutput, error)
+}
+
 // StsAPI is every sts operation awless-ro calls.
 type StsAPI interface {
 	generatedStsAPI
@@ -295,9 +339,11 @@ var (
 	_ CloudtrailAPI     = (*cloudtrail.Client)(nil)
 	_ CloudwatchAPI     = (*cloudwatch.Client)(nil)
 	_ CloudwatchlogsAPI = (*cloudwatchlogs.Client)(nil)
+	_ DynamodbAPI       = (*dynamodb.Client)(nil)
 	_ Ec2API            = (*ec2.Client)(nil)
 	_ EcrAPI            = (*ecr.Client)(nil)
 	_ EcsAPI            = (*ecs.Client)(nil)
+	_ EfsAPI            = (*efs.Client)(nil)
 	_ EksAPI            = (*eks.Client)(nil)
 	_ ElbAPI            = (*elasticloadbalancing.Client)(nil)
 	_ Elbv2API          = (*elasticloadbalancingv2.Client)(nil)
@@ -306,7 +352,9 @@ var (
 	_ RdsAPI            = (*rds.Client)(nil)
 	_ Route53API        = (*route53.Client)(nil)
 	_ S3API             = (*s3.Client)(nil)
+	_ SecretsmanagerAPI = (*secretsmanager.Client)(nil)
 	_ SnsAPI            = (*sns.Client)(nil)
 	_ SqsAPI            = (*sqs.Client)(nil)
+	_ SsmAPI            = (*ssm.Client)(nil)
 	_ StsAPI            = (*sts.Client)(nil)
 )

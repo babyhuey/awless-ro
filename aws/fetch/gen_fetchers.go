@@ -40,6 +40,8 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	ecrtypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
+	"github.com/aws/aws-sdk-go-v2/service/efs"
+	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	elbtypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
@@ -52,8 +54,12 @@ import (
 	rdstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	route53types "github.com/aws/aws-sdk-go-v2/service/route53/types"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	secretsmanagertypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	snstypes "github.com/aws/aws-sdk-go-v2/service/sns/types"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 
 	"github.com/theazz/awless-ro/aws/conv"
 	"github.com/theazz/awless-ro/fetch"
@@ -1266,6 +1272,127 @@ func BuildCloudtrailFetchFuncs(conf *Config) fetch.Funcs {
 
 		return resources, objects, nil
 	}
+	return funcs
+}
+
+func BuildEfsFetchFuncs(conf *Config) fetch.Funcs {
+	funcs := make(map[string]fetch.Func)
+
+	addManualEfsFetchFuncs(conf, funcs)
+
+	funcs["filesystem"] = func(ctx context.Context, cache fetch.Cache) ([]*graph.Resource, interface{}, error) {
+		var resources []*graph.Resource
+		var objects []efstypes.FileSystemDescription
+
+		if !conf.getBoolDefaultTrue("aws.efs.filesystem.sync") && !getBoolFromContext(ctx, "force") {
+			conf.Log.Verbose("sync: *disabled* for resource efs[filesystem]")
+			return resources, objects, nil
+		}
+
+		input := &efs.DescribeFileSystemsInput{}
+
+		paginator := efs.NewDescribeFileSystemsPaginator(conf.APIs.Efs, input)
+		for paginator.HasMorePages() {
+			out, err := paginator.NextPage(ctx)
+			if err != nil {
+				return resources, objects, err
+			}
+
+			for _, output := range out.FileSystems {
+				objects = append(objects, output)
+				res, err := awsconv.NewResource(output)
+				if err != nil {
+					return resources, objects, err
+				}
+				resources = append(resources, res)
+			}
+		}
+
+		return resources, objects, nil
+	}
+	return funcs
+}
+
+func BuildSecretsmanagerFetchFuncs(conf *Config) fetch.Funcs {
+	funcs := make(map[string]fetch.Func)
+
+	addManualSecretsmanagerFetchFuncs(conf, funcs)
+
+	funcs["secret"] = func(ctx context.Context, cache fetch.Cache) ([]*graph.Resource, interface{}, error) {
+		var resources []*graph.Resource
+		var objects []secretsmanagertypes.SecretListEntry
+
+		if !conf.getBoolDefaultTrue("aws.secretsmanager.secret.sync") && !getBoolFromContext(ctx, "force") {
+			conf.Log.Verbose("sync: *disabled* for resource secretsmanager[secret]")
+			return resources, objects, nil
+		}
+
+		input := &secretsmanager.ListSecretsInput{}
+
+		paginator := secretsmanager.NewListSecretsPaginator(conf.APIs.Secretsmanager, input)
+		for paginator.HasMorePages() {
+			out, err := paginator.NextPage(ctx)
+			if err != nil {
+				return resources, objects, err
+			}
+
+			for _, output := range out.SecretList {
+				objects = append(objects, output)
+				res, err := awsconv.NewResource(output)
+				if err != nil {
+					return resources, objects, err
+				}
+				resources = append(resources, res)
+			}
+		}
+
+		return resources, objects, nil
+	}
+	return funcs
+}
+
+func BuildSsmFetchFuncs(conf *Config) fetch.Funcs {
+	funcs := make(map[string]fetch.Func)
+
+	addManualSsmFetchFuncs(conf, funcs)
+
+	funcs["parameter"] = func(ctx context.Context, cache fetch.Cache) ([]*graph.Resource, interface{}, error) {
+		var resources []*graph.Resource
+		var objects []ssmtypes.ParameterMetadata
+
+		if !conf.getBoolDefaultTrue("aws.ssm.parameter.sync") && !getBoolFromContext(ctx, "force") {
+			conf.Log.Verbose("sync: *disabled* for resource ssm[parameter]")
+			return resources, objects, nil
+		}
+
+		input := &ssm.DescribeParametersInput{MaxResults: new(int32(50))}
+
+		paginator := ssm.NewDescribeParametersPaginator(conf.APIs.Ssm, input)
+		for paginator.HasMorePages() {
+			out, err := paginator.NextPage(ctx)
+			if err != nil {
+				return resources, objects, err
+			}
+
+			for _, output := range out.Parameters {
+				objects = append(objects, output)
+				res, err := awsconv.NewResource(output)
+				if err != nil {
+					return resources, objects, err
+				}
+				resources = append(resources, res)
+			}
+		}
+
+		return resources, objects, nil
+	}
+	return funcs
+}
+
+func BuildDynamodbFetchFuncs(conf *Config) fetch.Funcs {
+	funcs := make(map[string]fetch.Func)
+
+	addManualDynamodbFetchFuncs(conf, funcs)
 	return funcs
 }
 
