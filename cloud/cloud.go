@@ -92,6 +92,8 @@ const (
 	Trail string = "trail"
 	//efs
 	FileSystem string = "filesystem"
+	//secretsmanager
+	Secret string = "secret"
 	//container
 	Repository        string = "repository"
 	Registry          string = "registry"

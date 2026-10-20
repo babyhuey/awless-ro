@@ -54,6 +54,7 @@ var configDefinitions = map[string]*Definition{
 	"aws.cloudformation.sync":   {help: "Enable/disable sync of CloudFormation service (when empty: true)", defaultValue: "true", parseParamFn: parseBool},
 	"aws.cloudtrail.sync":       {help: "Enable/disable sync of CloudTrail service (when empty: true)", defaultValue: "true", parseParamFn: parseBool},
 	"aws.efs.sync":              {help: "Enable/disable sync of EFS service (when empty: true)", defaultValue: "true", parseParamFn: parseBool},
+	"aws.secretsmanager.sync":   {help: "Sync Secrets Manager secrets (metadata only): off by default", defaultValue: "false", parseParamFn: parseBool},
 }
 
 // defaultsDefinitions is empty: every entry it used to hold (instance.type,

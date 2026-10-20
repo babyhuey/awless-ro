@@ -334,4 +334,11 @@ var FetchersDefs = []FetchersDef{
 			{Api: "efs", ResourceType: cloud.FileSystem, AWSType: "efstypes.FileSystemDescription", ApiMethod: "DescribeFileSystems", OutputsExtractor: "FileSystems", Paginated: true},
 		},
 	},
+	{
+		Name: "secretsmanager",
+		Api:  []string{"secretsmanager"},
+		Fetchers: []Fetcher{
+			{Api: "secretsmanager", ResourceType: cloud.Secret, AWSType: "secretsmanagertypes.SecretListEntry", ApiMethod: "ListSecrets", OutputsExtractor: "SecretList", Paginated: true},
+		},
+	},
 }

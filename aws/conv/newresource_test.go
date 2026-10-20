@@ -57,6 +57,7 @@ import (
 	rdstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	route53types "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
+	secretsmanagertypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	snstypes "github.com/aws/aws-sdk-go-v2/service/sns/types"
 
 	"github.com/theazz/awless-ro/cloud"
@@ -222,6 +223,11 @@ var sdkPrototypes = map[string][]func() interface{}{
 	// EFS
 	cloud.FileSystem: {func() interface{} {
 		return efstypes.FileSystemDescription{FileSystemId: awssdk.String("fs-1")}
+	}},
+
+	// Secrets Manager
+	cloud.Secret: {func() interface{} {
+		return secretsmanagertypes.SecretListEntry{ARN: awssdk.String("arn:aws:secretsmanager:secret/1")}
 	}},
 }
 

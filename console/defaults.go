@@ -75,6 +75,7 @@ var ColumnsInListing = map[string][]string{
 	cloud.Stack:               {properties.ID, properties.Name, properties.State, properties.Created, properties.Modified},
 	cloud.Trail:               {properties.Name, properties.Bucket, properties.MultiRegion, properties.OrganizationTrail, properties.LogFileValidation},
 	cloud.FileSystem:          {properties.ID, properties.Name, properties.State, properties.Size, properties.PerformanceMode, properties.ThroughputMode, properties.Encrypted, properties.Created},
+	cloud.Secret:              {properties.Name, properties.RotationEnabled, properties.Modified, properties.LastAccessed, properties.Created},
 }
 
 var DefaultsColumnDefinitions = map[string][]ColumnDefinition{
@@ -521,6 +522,14 @@ var DefaultsColumnDefinitions = map[string][]ColumnDefinition{
 		StringColumnDefinition{Prop: properties.PerformanceMode, Friendly: "Performance"},
 		StringColumnDefinition{Prop: properties.ThroughputMode, Friendly: "Throughput"},
 		StringColumnDefinition{Prop: properties.Encrypted},
+		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.Created}},
+	},
+	//Secrets Manager
+	cloud.Secret: {
+		StringColumnDefinition{Prop: properties.Name},
+		StringColumnDefinition{Prop: properties.RotationEnabled, Friendly: "Rotation"},
+		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.Modified, Friendly: "Last changed"}},
+		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.LastAccessed, Friendly: "Last accessed"}},
 		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.Created}},
 	},
 }

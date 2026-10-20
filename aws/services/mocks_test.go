@@ -39,6 +39,7 @@ type (
 	manualElbMock            struct{}
 	manualLambdaMock         struct{}
 	manualRdsMock            struct{}
+	manualSecretsmanagerMock struct{}
 	manualSnsMock            struct{}
 	manualStsMock            struct{}
 )
