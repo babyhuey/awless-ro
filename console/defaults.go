@@ -487,7 +487,7 @@ var DefaultsColumnDefinitions = map[string][]ColumnDefinition{
 	cloud.LogGroup: {
 		StringColumnDefinition{Prop: properties.Name},
 		StringColumnDefinition{Prop: properties.Class},
-		StringColumnDefinition{Prop: properties.RetentionDays, Friendly: "Retention (days)"},
+		FallbackColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.RetentionDays, Friendly: "Retention (days)"}, Fallback: "never"},
 		StorageColumnDefinition{Unit: b, StringColumnDefinition: StringColumnDefinition{Prop: properties.Size}},
 		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.Created}},
 	},

@@ -20,6 +20,10 @@
   synced by default (`aws.apigatewayv2.sync`). (#76)
 - `list kmskeys`: KMS keys with alias, state, manager, usage, spec and creation time, off by default in `sync` (`aws.kms.sync`). (#73)
 
+### Changed
+
+- `list loggroups` shows `never` for a group with no retention set, as the console does. (#83)
+
 ### Fixed
 
 - A `*.sync` setting missing from the config (e.g. after `config unset`) now uses its
