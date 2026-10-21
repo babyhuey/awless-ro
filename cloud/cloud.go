@@ -102,6 +102,8 @@ const (
 	EksCluster string = "ekscluster"
 	//apigatewayv2
 	Api string = "api"
+	//kms
+	KmsKey string = "kmskey"
 	//container
 	Repository        string = "repository"
 	Registry          string = "registry"

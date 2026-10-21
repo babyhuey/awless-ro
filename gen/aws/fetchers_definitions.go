@@ -369,4 +369,11 @@ var FetchersDefs = []FetchersDef{
 			{Api: "apigatewayv2", ResourceType: cloud.Api, AWSType: "apigatewayv2types.Api", ManualFetcher: true},
 		},
 	},
+	{
+		Name: "kms",
+		Api:  []string{"kms"},
+		Fetchers: []Fetcher{
+			{Api: "kms", ResourceType: cloud.KmsKey, AWSType: "kmstypes.KeyMetadata", ManualFetcher: true},
+		},
+	},
 }

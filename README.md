@@ -291,9 +291,9 @@ for `show`. It never calls AWS: a Tab press does not wait on the network.
 
 ## Commands
 
-**`list`** — 57 resource types across EC2, IAM, S3, RDS, EFS, DynamoDB, AutoScaling,
+**`list`** — 58 resource types across EC2, IAM, S3, RDS, EFS, DynamoDB, AutoScaling,
 SNS, SQS, Route53, CloudWatch, CloudWatch Logs, CloudTrail, SSM Parameter Store,
-CloudFormation, Lambda, API Gateway v2, ECS, EKS, ECR, ELB, CloudFront, ACM and
+CloudFormation, Lambda, API Gateway v2, ECS, EKS, ECR, ELB, CloudFront, ACM, KMS and
 Secrets Manager,
 fetched from AWS when you ask (`awless-ro list -h` shows them all; `ls` is an alias).
 
@@ -461,8 +461,8 @@ and skipped; the rest still land.
 
 Some of it is off by default. S3 objects and DNS records cost an API call per parent —
 one per bucket, one per hosted zone — and the sync says so rather than reporting zero
-of them. Monitoring (CloudWatch alarms, metrics and log groups), Secrets Manager and
-SSM Parameter Store are off as whole services; turn one on with
+of them. Monitoring (CloudWatch alarms, metrics and log groups), Secrets Manager, SSM
+Parameter Store and KMS are off as whole services; turn one on with
 `awless-ro config set aws.ssm.sync true`.
 
 You rarely need to run it by hand. `show` and `inspect` refresh the copy on their own

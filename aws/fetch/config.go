@@ -34,6 +34,7 @@ type AWSAPI struct {
 	Dynamodb       DynamodbAPI
 	Eks            EksAPI
 	Apigatewayv2   Apigatewayv2API
+	Kms            KmsAPI
 }
 
 type Config struct {

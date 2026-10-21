@@ -18,6 +18,7 @@
   (`aws.eks.sync`). (#72)
 - `list apis`: API Gateway v2 HTTP and WebSocket APIs, in a new `apigatewayv2` service
   synced by default (`aws.apigatewayv2.sync`). (#76)
+- `list kmskeys`: KMS keys with alias, state, manager, usage, spec and creation time, off by default in `sync` (`aws.kms.sync`). (#73)
 
 ### Changed
 

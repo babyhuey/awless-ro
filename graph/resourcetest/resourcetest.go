@@ -170,6 +170,10 @@ func Api(id string) *rBuilder {
 	return new("api", id)
 }
 
+func KmsKey(id string) *rBuilder {
+	return new("kmskey", id)
+}
+
 func Image(id string) *rBuilder {
 	return new("image", id)
 }

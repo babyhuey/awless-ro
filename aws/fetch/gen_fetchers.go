@@ -1409,3 +1409,10 @@ func BuildApigatewayv2FetchFuncs(conf *Config) fetch.Funcs {
 	addManualApigatewayv2FetchFuncs(conf, funcs)
 	return funcs
 }
+
+func BuildKmsFetchFuncs(conf *Config) fetch.Funcs {
+	funcs := make(map[string]fetch.Func)
+
+	addManualKmsFetchFuncs(conf, funcs)
+	return funcs
+}

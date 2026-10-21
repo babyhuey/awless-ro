@@ -125,8 +125,11 @@ const (
 	IPv6Addresses                     = "cloud:ipv6Addresses"
 	IPv6Enabled                       = "cloud:ipv6Enabled"
 	Key                               = "cloud:key"
+	KeyManager                        = "cloud:keyManager"
 	KeyName                           = "cloud:keyName"
 	KeyPair                           = "cloud:keyPair"
+	KeySpec                           = "cloud:keySpec"
+	KeyUsage                          = "cloud:keyUsage"
 	KMSKey                            = "cloud:kmsKey"
 	LastAccessed                      = "cloud:lastAccessed"
 	LastRotated                       = "cloud:lastRotated"
@@ -354,8 +357,11 @@ func init() {
 		properties.IPv6Addresses:                     IPv6Addresses,
 		properties.IPv6Enabled:                       IPv6Enabled,
 		properties.Key:                               Key,
+		properties.KeyManager:                        KeyManager,
 		properties.KeyName:                           KeyName,
 		properties.KeyPair:                           KeyPair,
+		properties.KeySpec:                           KeySpec,
+		properties.KeyUsage:                          KeyUsage,
 		properties.KMSKey:                            KMSKey,
 		properties.LastAccessed:                      LastAccessed,
 		properties.LastRotated:                       LastRotated,
@@ -583,8 +589,11 @@ var Properties = RDFProperties{
 	IPv6Addresses:                     {ID: IPv6Addresses, RdfType: "rdf:Property", RdfsLabel: "IPv6Addresses", RdfsDefinedBy: "rdfs:list", RdfsDataType: "xsd:string"},
 	IPv6Enabled:                       {ID: IPv6Enabled, RdfType: "rdf:Property", RdfsLabel: "IPv6Enabled", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:boolean"},
 	Key:                               {ID: Key, RdfType: "rdf:Property", RdfsLabel: "Key", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
+	KeyManager:                        {ID: KeyManager, RdfType: "rdf:Property", RdfsLabel: "KeyManager", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	KeyName:                           {ID: KeyName, RdfType: "rdf:Property", RdfsLabel: "KeyName", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	KeyPair:                           {ID: KeyPair, RdfType: "rdf:Property", RdfsLabel: "KeyPair", RdfsDefinedBy: "rdfs:Class", RdfsDataType: "xsd:string"},
+	KeySpec:                           {ID: KeySpec, RdfType: "rdf:Property", RdfsLabel: "KeySpec", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
+	KeyUsage:                          {ID: KeyUsage, RdfType: "rdf:Property", RdfsLabel: "KeyUsage", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	KMSKey:                            {ID: KMSKey, RdfType: "rdf:Property", RdfsLabel: "KMSKey", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	LastAccessed:                      {ID: LastAccessed, RdfType: "rdf:Property", RdfsLabel: "LastAccessed", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:dateTime"},
 	LastRotated:                       {ID: LastRotated, RdfType: "rdf:Property", RdfsLabel: "LastRotated", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:dateTime"},

@@ -59,6 +59,7 @@ var configDefinitions = map[string]*Definition{
 	"aws.dynamodb.sync":         {help: "Enable/disable sync of DynamoDB service (when empty: true)", defaultValue: "true", parseParamFn: parseBool},
 	"aws.eks.sync":              {help: "Enable/disable sync of EKS service (when empty: true)", defaultValue: "true", parseParamFn: parseBool},
 	"aws.apigatewayv2.sync":     {help: "Enable/disable sync of API Gateway v2 service (when empty: true)", defaultValue: "true", parseParamFn: parseBool},
+	"aws.kms.sync":              {help: "Sync KMS keys: off by default, one API call per key", defaultValue: "false", parseParamFn: parseBool},
 }
 
 // defaultsDefinitions is empty: every entry it used to hold (instance.type,
