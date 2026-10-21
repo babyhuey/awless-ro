@@ -28,6 +28,8 @@ import (
 	awssdk "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	acmtypes "github.com/aws/aws-sdk-go-v2/service/acm/types"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
+	apigatewayv2types "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	autoscalingtypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
@@ -40,12 +42,18 @@ import (
 	cloudwatchtypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	cloudwatchlogstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	dynamodbtypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	ecrtypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	ecstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	"github.com/aws/aws-sdk-go-v2/service/efs"
+	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	"github.com/aws/aws-sdk-go-v2/service/eks"
+	ekstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	elbtypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
@@ -62,9 +70,13 @@ import (
 	route53types "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	secretsmanagertypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	snstypes "github.com/aws/aws-sdk-go-v2/service/sns/types"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 
 	"github.com/theazz/awless-ro/aws/fetch"
@@ -86,6 +98,12 @@ var ServiceNames = []string{
 	"cdn",
 	"cloudformation",
 	"cloudtrail",
+	"efs",
+	"secretsmanager",
+	"ssm",
+	"dynamodb",
+	"eks",
+	"apigatewayv2",
 	"kms",
 }
 
@@ -141,6 +159,12 @@ var ResourceTypes = []string{
 	"distribution",
 	"stack",
 	"trail",
+	"filesystem",
+	"secret",
+	"parameter",
+	"table",
+	"ekscluster",
+	"api",
 	"kmskey",
 }
 
@@ -165,6 +189,12 @@ var ServicePerAPI = map[string]string{
 	"cloudfront":     "cdn",
 	"cloudformation": "cloudformation",
 	"cloudtrail":     "cloudtrail",
+	"efs":            "efs",
+	"secretsmanager": "secretsmanager",
+	"ssm":            "ssm",
+	"dynamodb":       "dynamodb",
+	"eks":            "eks",
+	"apigatewayv2":   "apigatewayv2",
 	"kms":            "kms",
 }
 
@@ -220,6 +250,12 @@ var ServicePerResourceType = map[string]string{
 	"distribution":        "cdn",
 	"stack":               "cloudformation",
 	"trail":               "cloudtrail",
+	"filesystem":          "efs",
+	"secret":              "secretsmanager",
+	"parameter":           "ssm",
+	"table":               "dynamodb",
+	"ekscluster":          "eks",
+	"api":                 "apigatewayv2",
 	"kmskey":              "kms",
 }
 
@@ -275,6 +311,12 @@ var APIPerResourceType = map[string]string{
 	"distribution":        "cloudfront",
 	"stack":               "cloudformation",
 	"trail":               "cloudtrail",
+	"filesystem":          "efs",
+	"secret":              "secretsmanager",
+	"parameter":           "ssm",
+	"table":               "dynamodb",
+	"ekscluster":          "eks",
+	"api":                 "apigatewayv2",
 	"kmskey":              "kms",
 }
 
@@ -2458,6 +2500,750 @@ func (s *Cloudtrail) FetchByType(ctx context.Context, t string) (cloud.GraphAPI,
 
 func (s *Cloudtrail) IsSyncDisabled() bool {
 	return !getBool(s.config, "aws.cloudtrail.sync", true)
+}
+
+type Efs struct {
+	fetcher         fetch.Fetcher
+	region, profile string
+	config          map[string]interface{}
+	log             *logger.Logger
+	awsfetch.EfsAPI
+}
+
+func NewEfs(cfg awssdk.Config, profile string, extraConf map[string]interface{}, log *logger.Logger) cloud.Service {
+	region := cfg.Region
+	efsAPI := efs.NewFromConfig(cfg)
+
+	fetchConfig := awsfetch.NewConfig(&awsfetch.AWSAPI{
+		Efs: efsAPI,
+	})
+	fetchConfig.Extra = extraConf
+	fetchConfig.Log = log
+
+	return &Efs{
+		EfsAPI:  efsAPI,
+		fetcher: fetch.NewFetcher(awsfetch.BuildEfsFetchFuncs(fetchConfig)),
+		config:  extraConf,
+		region:  region,
+		profile: profile,
+		log:     log,
+	}
+}
+
+func (s *Efs) Name() string {
+	return "efs"
+}
+
+func (s *Efs) Region() string {
+	return s.region
+}
+
+func (s *Efs) Profile() string {
+	return s.profile
+}
+
+func (s *Efs) ResourceTypes() []string {
+	return []string{
+		"filesystem",
+	}
+}
+
+func (s *Efs) Fetch(ctx context.Context) (cloud.GraphAPI, error) {
+	if s.IsSyncDisabled() {
+		return graph.NewGraph(), nil
+	}
+
+	allErrors := new(fetch.Error)
+
+	gph, err := s.fetcher.Fetch(context.WithValue(ctx, "region", s.region))
+	defer s.fetcher.Reset()
+
+	for _, e := range *fetch.WrapError(err) {
+		switch {
+		case e == nil:
+			continue
+		case awsfetch.IsAccessDenied(e):
+			allErrors.Add(cloud.ErrFetchAccessDenied)
+		default:
+			allErrors.Add(e)
+		}
+	}
+
+	if err := gph.AddResource(graph.InitResource(cloud.Region, s.region)); err != nil {
+		return gph, err
+	}
+
+	snap := gph.AsRDFGraphSnaphot()
+
+	errc := make(chan error)
+	var wg sync.WaitGroup
+	if getBool(s.config, "aws.efs.filesystem.sync", true) {
+		list, err := s.fetcher.Get("filesystem_objects")
+		if err != nil {
+			return gph, err
+		}
+		objects, ok := list.([]efstypes.FileSystemDescription)
+		if !ok {
+			return gph, errors.New("cannot cast to '[]efstypes.FileSystemDescription' type from fetch context")
+		}
+		for _, r := range objects {
+			for _, fn := range addParentsFns["filesystem"] {
+				wg.Add(1)
+				go func(f addParentFn, snap triplestore.RDFGraph, region string, res efstypes.FileSystemDescription) {
+					defer wg.Done()
+					if err := f(gph, snap, region, res); err != nil {
+						errc <- err
+					}
+				}(fn, snap, s.region, r)
+			}
+		}
+	}
+
+	go func() {
+		wg.Wait()
+		close(errc)
+	}()
+
+	for err := range errc {
+		if err != nil {
+			allErrors.Add(err)
+		}
+	}
+
+	if allErrors.Any() {
+		return gph, allErrors
+	}
+
+	return gph, nil
+}
+
+func (s *Efs) FetchByType(ctx context.Context, t string) (cloud.GraphAPI, error) {
+	defer s.fetcher.Reset()
+	return s.fetcher.FetchByType(context.WithValue(ctx, "region", s.region), t)
+}
+
+func (s *Efs) IsSyncDisabled() bool {
+	return !getBool(s.config, "aws.efs.sync", true)
+}
+
+type Secretsmanager struct {
+	fetcher         fetch.Fetcher
+	region, profile string
+	config          map[string]interface{}
+	log             *logger.Logger
+	awsfetch.SecretsmanagerAPI
+}
+
+func NewSecretsmanager(cfg awssdk.Config, profile string, extraConf map[string]interface{}, log *logger.Logger) cloud.Service {
+	region := cfg.Region
+	secretsmanagerAPI := secretsmanager.NewFromConfig(cfg)
+
+	fetchConfig := awsfetch.NewConfig(&awsfetch.AWSAPI{
+		Secretsmanager: secretsmanagerAPI,
+	})
+	fetchConfig.Extra = extraConf
+	fetchConfig.Log = log
+
+	return &Secretsmanager{
+		SecretsmanagerAPI: secretsmanagerAPI,
+		fetcher:           fetch.NewFetcher(awsfetch.BuildSecretsmanagerFetchFuncs(fetchConfig)),
+		config:            extraConf,
+		region:            region,
+		profile:           profile,
+		log:               log,
+	}
+}
+
+func (s *Secretsmanager) Name() string {
+	return "secretsmanager"
+}
+
+func (s *Secretsmanager) Region() string {
+	return s.region
+}
+
+func (s *Secretsmanager) Profile() string {
+	return s.profile
+}
+
+func (s *Secretsmanager) ResourceTypes() []string {
+	return []string{
+		"secret",
+	}
+}
+
+func (s *Secretsmanager) Fetch(ctx context.Context) (cloud.GraphAPI, error) {
+	if s.IsSyncDisabled() {
+		return graph.NewGraph(), nil
+	}
+
+	allErrors := new(fetch.Error)
+
+	gph, err := s.fetcher.Fetch(context.WithValue(ctx, "region", s.region))
+	defer s.fetcher.Reset()
+
+	for _, e := range *fetch.WrapError(err) {
+		switch {
+		case e == nil:
+			continue
+		case awsfetch.IsAccessDenied(e):
+			allErrors.Add(cloud.ErrFetchAccessDenied)
+		default:
+			allErrors.Add(e)
+		}
+	}
+
+	if err := gph.AddResource(graph.InitResource(cloud.Region, s.region)); err != nil {
+		return gph, err
+	}
+
+	snap := gph.AsRDFGraphSnaphot()
+
+	errc := make(chan error)
+	var wg sync.WaitGroup
+	if getBool(s.config, "aws.secretsmanager.secret.sync", true) {
+		list, err := s.fetcher.Get("secret_objects")
+		if err != nil {
+			return gph, err
+		}
+		objects, ok := list.([]secretsmanagertypes.SecretListEntry)
+		if !ok {
+			return gph, errors.New("cannot cast to '[]secretsmanagertypes.SecretListEntry' type from fetch context")
+		}
+		for _, r := range objects {
+			for _, fn := range addParentsFns["secret"] {
+				wg.Add(1)
+				go func(f addParentFn, snap triplestore.RDFGraph, region string, res secretsmanagertypes.SecretListEntry) {
+					defer wg.Done()
+					if err := f(gph, snap, region, res); err != nil {
+						errc <- err
+					}
+				}(fn, snap, s.region, r)
+			}
+		}
+	}
+
+	go func() {
+		wg.Wait()
+		close(errc)
+	}()
+
+	for err := range errc {
+		if err != nil {
+			allErrors.Add(err)
+		}
+	}
+
+	if allErrors.Any() {
+		return gph, allErrors
+	}
+
+	return gph, nil
+}
+
+func (s *Secretsmanager) FetchByType(ctx context.Context, t string) (cloud.GraphAPI, error) {
+	defer s.fetcher.Reset()
+	return s.fetcher.FetchByType(context.WithValue(ctx, "region", s.region), t)
+}
+
+func (s *Secretsmanager) IsSyncDisabled() bool {
+	return !getBool(s.config, "aws.secretsmanager.sync", true)
+}
+
+type Ssm struct {
+	fetcher         fetch.Fetcher
+	region, profile string
+	config          map[string]interface{}
+	log             *logger.Logger
+	awsfetch.SsmAPI
+}
+
+func NewSsm(cfg awssdk.Config, profile string, extraConf map[string]interface{}, log *logger.Logger) cloud.Service {
+	region := cfg.Region
+	ssmAPI := ssm.NewFromConfig(cfg)
+
+	fetchConfig := awsfetch.NewConfig(&awsfetch.AWSAPI{
+		Ssm: ssmAPI,
+	})
+	fetchConfig.Extra = extraConf
+	fetchConfig.Log = log
+
+	return &Ssm{
+		SsmAPI:  ssmAPI,
+		fetcher: fetch.NewFetcher(awsfetch.BuildSsmFetchFuncs(fetchConfig)),
+		config:  extraConf,
+		region:  region,
+		profile: profile,
+		log:     log,
+	}
+}
+
+func (s *Ssm) Name() string {
+	return "ssm"
+}
+
+func (s *Ssm) Region() string {
+	return s.region
+}
+
+func (s *Ssm) Profile() string {
+	return s.profile
+}
+
+func (s *Ssm) ResourceTypes() []string {
+	return []string{
+		"parameter",
+	}
+}
+
+func (s *Ssm) Fetch(ctx context.Context) (cloud.GraphAPI, error) {
+	if s.IsSyncDisabled() {
+		return graph.NewGraph(), nil
+	}
+
+	allErrors := new(fetch.Error)
+
+	gph, err := s.fetcher.Fetch(context.WithValue(ctx, "region", s.region))
+	defer s.fetcher.Reset()
+
+	for _, e := range *fetch.WrapError(err) {
+		switch {
+		case e == nil:
+			continue
+		case awsfetch.IsAccessDenied(e):
+			allErrors.Add(cloud.ErrFetchAccessDenied)
+		default:
+			allErrors.Add(e)
+		}
+	}
+
+	if err := gph.AddResource(graph.InitResource(cloud.Region, s.region)); err != nil {
+		return gph, err
+	}
+
+	snap := gph.AsRDFGraphSnaphot()
+
+	errc := make(chan error)
+	var wg sync.WaitGroup
+	if getBool(s.config, "aws.ssm.parameter.sync", true) {
+		list, err := s.fetcher.Get("parameter_objects")
+		if err != nil {
+			return gph, err
+		}
+		objects, ok := list.([]ssmtypes.ParameterMetadata)
+		if !ok {
+			return gph, errors.New("cannot cast to '[]ssmtypes.ParameterMetadata' type from fetch context")
+		}
+		for _, r := range objects {
+			for _, fn := range addParentsFns["parameter"] {
+				wg.Add(1)
+				go func(f addParentFn, snap triplestore.RDFGraph, region string, res ssmtypes.ParameterMetadata) {
+					defer wg.Done()
+					if err := f(gph, snap, region, res); err != nil {
+						errc <- err
+					}
+				}(fn, snap, s.region, r)
+			}
+		}
+	}
+
+	go func() {
+		wg.Wait()
+		close(errc)
+	}()
+
+	for err := range errc {
+		if err != nil {
+			allErrors.Add(err)
+		}
+	}
+
+	if allErrors.Any() {
+		return gph, allErrors
+	}
+
+	return gph, nil
+}
+
+func (s *Ssm) FetchByType(ctx context.Context, t string) (cloud.GraphAPI, error) {
+	defer s.fetcher.Reset()
+	return s.fetcher.FetchByType(context.WithValue(ctx, "region", s.region), t)
+}
+
+func (s *Ssm) IsSyncDisabled() bool {
+	return !getBool(s.config, "aws.ssm.sync", true)
+}
+
+type Dynamodb struct {
+	fetcher         fetch.Fetcher
+	region, profile string
+	config          map[string]interface{}
+	log             *logger.Logger
+	awsfetch.DynamodbAPI
+}
+
+func NewDynamodb(cfg awssdk.Config, profile string, extraConf map[string]interface{}, log *logger.Logger) cloud.Service {
+	region := cfg.Region
+	dynamodbAPI := dynamodb.NewFromConfig(cfg)
+
+	fetchConfig := awsfetch.NewConfig(&awsfetch.AWSAPI{
+		Dynamodb: dynamodbAPI,
+	})
+	fetchConfig.Extra = extraConf
+	fetchConfig.Log = log
+
+	return &Dynamodb{
+		DynamodbAPI: dynamodbAPI,
+		fetcher:     fetch.NewFetcher(awsfetch.BuildDynamodbFetchFuncs(fetchConfig)),
+		config:      extraConf,
+		region:      region,
+		profile:     profile,
+		log:         log,
+	}
+}
+
+func (s *Dynamodb) Name() string {
+	return "dynamodb"
+}
+
+func (s *Dynamodb) Region() string {
+	return s.region
+}
+
+func (s *Dynamodb) Profile() string {
+	return s.profile
+}
+
+func (s *Dynamodb) ResourceTypes() []string {
+	return []string{
+		"table",
+	}
+}
+
+func (s *Dynamodb) Fetch(ctx context.Context) (cloud.GraphAPI, error) {
+	if s.IsSyncDisabled() {
+		return graph.NewGraph(), nil
+	}
+
+	allErrors := new(fetch.Error)
+
+	gph, err := s.fetcher.Fetch(context.WithValue(ctx, "region", s.region))
+	defer s.fetcher.Reset()
+
+	for _, e := range *fetch.WrapError(err) {
+		switch {
+		case e == nil:
+			continue
+		case awsfetch.IsAccessDenied(e):
+			allErrors.Add(cloud.ErrFetchAccessDenied)
+		default:
+			allErrors.Add(e)
+		}
+	}
+
+	if err := gph.AddResource(graph.InitResource(cloud.Region, s.region)); err != nil {
+		return gph, err
+	}
+
+	snap := gph.AsRDFGraphSnaphot()
+
+	errc := make(chan error)
+	var wg sync.WaitGroup
+	if getBool(s.config, "aws.dynamodb.table.sync", true) {
+		list, err := s.fetcher.Get("table_objects")
+		if err != nil {
+			return gph, err
+		}
+		objects, ok := list.([]dynamodbtypes.TableDescription)
+		if !ok {
+			return gph, errors.New("cannot cast to '[]dynamodbtypes.TableDescription' type from fetch context")
+		}
+		for _, r := range objects {
+			for _, fn := range addParentsFns["table"] {
+				wg.Add(1)
+				go func(f addParentFn, snap triplestore.RDFGraph, region string, res dynamodbtypes.TableDescription) {
+					defer wg.Done()
+					if err := f(gph, snap, region, res); err != nil {
+						errc <- err
+					}
+				}(fn, snap, s.region, r)
+			}
+		}
+	}
+
+	go func() {
+		wg.Wait()
+		close(errc)
+	}()
+
+	for err := range errc {
+		if err != nil {
+			allErrors.Add(err)
+		}
+	}
+
+	if allErrors.Any() {
+		return gph, allErrors
+	}
+
+	return gph, nil
+}
+
+func (s *Dynamodb) FetchByType(ctx context.Context, t string) (cloud.GraphAPI, error) {
+	defer s.fetcher.Reset()
+	return s.fetcher.FetchByType(context.WithValue(ctx, "region", s.region), t)
+}
+
+func (s *Dynamodb) IsSyncDisabled() bool {
+	return !getBool(s.config, "aws.dynamodb.sync", true)
+}
+
+type Eks struct {
+	fetcher         fetch.Fetcher
+	region, profile string
+	config          map[string]interface{}
+	log             *logger.Logger
+	awsfetch.EksAPI
+}
+
+func NewEks(cfg awssdk.Config, profile string, extraConf map[string]interface{}, log *logger.Logger) cloud.Service {
+	region := cfg.Region
+	eksAPI := eks.NewFromConfig(cfg)
+
+	fetchConfig := awsfetch.NewConfig(&awsfetch.AWSAPI{
+		Eks: eksAPI,
+	})
+	fetchConfig.Extra = extraConf
+	fetchConfig.Log = log
+
+	return &Eks{
+		EksAPI:  eksAPI,
+		fetcher: fetch.NewFetcher(awsfetch.BuildEksFetchFuncs(fetchConfig)),
+		config:  extraConf,
+		region:  region,
+		profile: profile,
+		log:     log,
+	}
+}
+
+func (s *Eks) Name() string {
+	return "eks"
+}
+
+func (s *Eks) Region() string {
+	return s.region
+}
+
+func (s *Eks) Profile() string {
+	return s.profile
+}
+
+func (s *Eks) ResourceTypes() []string {
+	return []string{
+		"ekscluster",
+	}
+}
+
+func (s *Eks) Fetch(ctx context.Context) (cloud.GraphAPI, error) {
+	if s.IsSyncDisabled() {
+		return graph.NewGraph(), nil
+	}
+
+	allErrors := new(fetch.Error)
+
+	gph, err := s.fetcher.Fetch(context.WithValue(ctx, "region", s.region))
+	defer s.fetcher.Reset()
+
+	for _, e := range *fetch.WrapError(err) {
+		switch {
+		case e == nil:
+			continue
+		case awsfetch.IsAccessDenied(e):
+			allErrors.Add(cloud.ErrFetchAccessDenied)
+		default:
+			allErrors.Add(e)
+		}
+	}
+
+	if err := gph.AddResource(graph.InitResource(cloud.Region, s.region)); err != nil {
+		return gph, err
+	}
+
+	snap := gph.AsRDFGraphSnaphot()
+
+	errc := make(chan error)
+	var wg sync.WaitGroup
+	if getBool(s.config, "aws.eks.ekscluster.sync", true) {
+		list, err := s.fetcher.Get("ekscluster_objects")
+		if err != nil {
+			return gph, err
+		}
+		objects, ok := list.([]ekstypes.Cluster)
+		if !ok {
+			return gph, errors.New("cannot cast to '[]ekstypes.Cluster' type from fetch context")
+		}
+		for _, r := range objects {
+			for _, fn := range addParentsFns["ekscluster"] {
+				wg.Add(1)
+				go func(f addParentFn, snap triplestore.RDFGraph, region string, res ekstypes.Cluster) {
+					defer wg.Done()
+					if err := f(gph, snap, region, res); err != nil {
+						errc <- err
+					}
+				}(fn, snap, s.region, r)
+			}
+		}
+	}
+
+	go func() {
+		wg.Wait()
+		close(errc)
+	}()
+
+	for err := range errc {
+		if err != nil {
+			allErrors.Add(err)
+		}
+	}
+
+	if allErrors.Any() {
+		return gph, allErrors
+	}
+
+	return gph, nil
+}
+
+func (s *Eks) FetchByType(ctx context.Context, t string) (cloud.GraphAPI, error) {
+	defer s.fetcher.Reset()
+	return s.fetcher.FetchByType(context.WithValue(ctx, "region", s.region), t)
+}
+
+func (s *Eks) IsSyncDisabled() bool {
+	return !getBool(s.config, "aws.eks.sync", true)
+}
+
+type Apigatewayv2 struct {
+	fetcher         fetch.Fetcher
+	region, profile string
+	config          map[string]interface{}
+	log             *logger.Logger
+	awsfetch.Apigatewayv2API
+}
+
+func NewApigatewayv2(cfg awssdk.Config, profile string, extraConf map[string]interface{}, log *logger.Logger) cloud.Service {
+	region := cfg.Region
+	apigatewayv2API := apigatewayv2.NewFromConfig(cfg)
+
+	fetchConfig := awsfetch.NewConfig(&awsfetch.AWSAPI{
+		Apigatewayv2: apigatewayv2API,
+	})
+	fetchConfig.Extra = extraConf
+	fetchConfig.Log = log
+
+	return &Apigatewayv2{
+		Apigatewayv2API: apigatewayv2API,
+		fetcher:         fetch.NewFetcher(awsfetch.BuildApigatewayv2FetchFuncs(fetchConfig)),
+		config:          extraConf,
+		region:          region,
+		profile:         profile,
+		log:             log,
+	}
+}
+
+func (s *Apigatewayv2) Name() string {
+	return "apigatewayv2"
+}
+
+func (s *Apigatewayv2) Region() string {
+	return s.region
+}
+
+func (s *Apigatewayv2) Profile() string {
+	return s.profile
+}
+
+func (s *Apigatewayv2) ResourceTypes() []string {
+	return []string{
+		"api",
+	}
+}
+
+func (s *Apigatewayv2) Fetch(ctx context.Context) (cloud.GraphAPI, error) {
+	if s.IsSyncDisabled() {
+		return graph.NewGraph(), nil
+	}
+
+	allErrors := new(fetch.Error)
+
+	gph, err := s.fetcher.Fetch(context.WithValue(ctx, "region", s.region))
+	defer s.fetcher.Reset()
+
+	for _, e := range *fetch.WrapError(err) {
+		switch {
+		case e == nil:
+			continue
+		case awsfetch.IsAccessDenied(e):
+			allErrors.Add(cloud.ErrFetchAccessDenied)
+		default:
+			allErrors.Add(e)
+		}
+	}
+
+	if err := gph.AddResource(graph.InitResource(cloud.Region, s.region)); err != nil {
+		return gph, err
+	}
+
+	snap := gph.AsRDFGraphSnaphot()
+
+	errc := make(chan error)
+	var wg sync.WaitGroup
+	if getBool(s.config, "aws.apigatewayv2.api.sync", true) {
+		list, err := s.fetcher.Get("api_objects")
+		if err != nil {
+			return gph, err
+		}
+		objects, ok := list.([]apigatewayv2types.Api)
+		if !ok {
+			return gph, errors.New("cannot cast to '[]apigatewayv2types.Api' type from fetch context")
+		}
+		for _, r := range objects {
+			for _, fn := range addParentsFns["api"] {
+				wg.Add(1)
+				go func(f addParentFn, snap triplestore.RDFGraph, region string, res apigatewayv2types.Api) {
+					defer wg.Done()
+					if err := f(gph, snap, region, res); err != nil {
+						errc <- err
+					}
+				}(fn, snap, s.region, r)
+			}
+		}
+	}
+
+	go func() {
+		wg.Wait()
+		close(errc)
+	}()
+
+	for err := range errc {
+		if err != nil {
+			allErrors.Add(err)
+		}
+	}
+
+	if allErrors.Any() {
+		return gph, allErrors
+	}
+
+	return gph, nil
+}
+
+func (s *Apigatewayv2) FetchByType(ctx context.Context, t string) (cloud.GraphAPI, error) {
+	defer s.fetcher.Reset()
+	return s.fetcher.FetchByType(context.WithValue(ctx, "region", s.region), t)
+}
+
+func (s *Apigatewayv2) IsSyncDisabled() bool {
+	return !getBool(s.config, "aws.apigatewayv2.sync", true)
 }
 
 type Kms struct {

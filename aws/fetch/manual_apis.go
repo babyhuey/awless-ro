@@ -27,9 +27,12 @@ package awsfetch
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
@@ -47,13 +50,21 @@ type (
 	manualCloudfrontAPI     interface{}
 	manualCloudwatchAPI     interface{}
 	manualCloudwatchlogsAPI interface{}
+	manualEfsAPI            interface{}
 	manualEc2API            interface{}
 	manualEcrAPI            interface{}
 	manualElbAPI            interface{}
 	manualLambdaAPI         interface{}
 	manualRdsAPI            interface{}
+	manualSecretsmanagerAPI interface{}
 	manualSnsAPI            interface{}
+	manualSsmAPI            interface{}
 )
+
+// apigatewayv2: GetApis has no paginator in the SDK, so its fetcher pages by hand.
+type manualApigatewayv2API interface {
+	GetApis(context.Context, *apigatewayv2.GetApisInput, ...func(*apigatewayv2.Options)) (*apigatewayv2.GetApisOutput, error)
+}
 
 // autoscaling: the scaling activity tailer.
 type manualAutoscalingAPI interface {
@@ -63,6 +74,12 @@ type manualAutoscalingAPI interface {
 // cloudformation: the stack event tailer.
 type manualCloudformationAPI interface {
 	DescribeStackEvents(context.Context, *cloudformation.DescribeStackEventsInput, ...func(*cloudformation.Options)) (*cloudformation.DescribeStackEventsOutput, error)
+}
+
+// dynamodb: ListTables returns only names, so each table is described in turn.
+type manualDynamodbAPI interface {
+	DescribeTable(context.Context, *dynamodb.DescribeTableInput, ...func(*dynamodb.Options)) (*dynamodb.DescribeTableOutput, error)
+	ListTables(context.Context, *dynamodb.ListTablesInput, ...func(*dynamodb.Options)) (*dynamodb.ListTablesOutput, error)
 }
 
 // ecs: clusters, tasks and container instances each take several chained calls,
@@ -76,6 +93,13 @@ type manualEcsAPI interface {
 	ListContainerInstances(context.Context, *ecs.ListContainerInstancesInput, ...func(*ecs.Options)) (*ecs.ListContainerInstancesOutput, error)
 	ListTaskDefinitions(context.Context, *ecs.ListTaskDefinitionsInput, ...func(*ecs.Options)) (*ecs.ListTaskDefinitionsOutput, error)
 	ListTasks(context.Context, *ecs.ListTasksInput, ...func(*ecs.Options)) (*ecs.ListTasksOutput, error)
+}
+
+// eks: ListClusters returns only names, so each cluster is a DescribeCluster of
+// its own.
+type manualEksAPI interface {
+	DescribeCluster(context.Context, *eks.DescribeClusterInput, ...func(*eks.Options)) (*eks.DescribeClusterOutput, error)
+	ListClusters(context.Context, *eks.ListClustersInput, ...func(*eks.Options)) (*eks.ListClustersOutput, error)
 }
 
 // elbv2: listeners hang off load balancers and are fetched per balancer, and a

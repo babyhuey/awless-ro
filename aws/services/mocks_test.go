@@ -5,8 +5,14 @@ import (
 	"fmt"
 
 	awssdk "github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
+	apigatewayv2types "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	dynamodbtypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	ecstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	"github.com/aws/aws-sdk-go-v2/service/eks"
+	ekstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	elbv2types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -38,12 +44,19 @@ type (
 	manualCloudwatchlogsMock struct{}
 	manualEc2Mock            struct{}
 	manualEcrMock            struct{}
+	manualEfsMock            struct{}
 	manualElbMock            struct{}
 	manualLambdaMock         struct{}
 	manualRdsMock            struct{}
+	manualSecretsmanagerMock struct{}
 	manualSnsMock            struct{}
+	manualSsmMock            struct{}
 	manualStsMock            struct{}
 )
+
+type manualApigatewayv2Mock struct {
+	apis []apigatewayv2types.Api
+}
 
 type manualElbv2Mock struct {
 	listeners                []elbv2types.Listener
@@ -70,6 +83,14 @@ type manualS3Mock struct {
 	grants  map[string][]s3types.Grant
 }
 
+type manualDynamodbMock struct {
+	tables []dynamodbtypes.TableDescription
+}
+
+type manualEksMock struct {
+	clusters []ekstypes.Cluster
+}
+
 type manualKmsMock struct {
 	keys    []kmstypes.KeyMetadata
 	aliases []kmstypes.AliasListEntry
@@ -89,6 +110,10 @@ type manualEcsMock struct {
 	tasksNames              map[string][]string
 	containerinstances      map[string][]ecstypes.ContainerInstance
 	containerinstancesNames map[string][]string
+}
+
+func (m *mockApigatewayv2) GetApis(_ context.Context, _ *apigatewayv2.GetApisInput, _ ...func(*apigatewayv2.Options)) (*apigatewayv2.GetApisOutput, error) {
+	return &apigatewayv2.GetApisOutput{Items: m.apis}, nil
 }
 
 func (m *mockElbv2) DescribeListeners(_ context.Context, input *elasticloadbalancingv2.DescribeListenersInput, _ ...func(*elasticloadbalancingv2.Options)) (*elasticloadbalancingv2.DescribeListenersOutput, error) {
@@ -188,6 +213,40 @@ func (m *mockSqs) GetQueueAttributes(_ context.Context, input *sqs.GetQueueAttri
 	return &sqs.GetQueueAttributesOutput{
 		Attributes: m.attributes[awssdk.ToString(input.QueueUrl)],
 	}, nil
+}
+
+func (m *mockDynamodb) ListTables(_ context.Context, _ *dynamodb.ListTablesInput, _ ...func(*dynamodb.Options)) (*dynamodb.ListTablesOutput, error) {
+	var names []string
+	for _, t := range m.tables {
+		names = append(names, awssdk.ToString(t.TableName))
+	}
+	return &dynamodb.ListTablesOutput{TableNames: names}, nil
+}
+
+func (m *mockDynamodb) DescribeTable(_ context.Context, input *dynamodb.DescribeTableInput, _ ...func(*dynamodb.Options)) (*dynamodb.DescribeTableOutput, error) {
+	for _, t := range m.tables {
+		if awssdk.ToString(t.TableName) == awssdk.ToString(input.TableName) {
+			return &dynamodb.DescribeTableOutput{Table: &t}, nil
+		}
+	}
+	return nil, &dynamodbtypes.ResourceNotFoundException{Message: input.TableName}
+}
+
+func (m *mockEks) ListClusters(_ context.Context, _ *eks.ListClustersInput, _ ...func(*eks.Options)) (*eks.ListClustersOutput, error) {
+	var names []string
+	for _, c := range m.clusters {
+		names = append(names, awssdk.ToString(c.Name))
+	}
+	return &eks.ListClustersOutput{Clusters: names}, nil
+}
+
+func (m *mockEks) DescribeCluster(_ context.Context, input *eks.DescribeClusterInput, _ ...func(*eks.Options)) (*eks.DescribeClusterOutput, error) {
+	for _, c := range m.clusters {
+		if awssdk.ToString(c.Name) == awssdk.ToString(input.Name) {
+			return &eks.DescribeClusterOutput{Cluster: &c}, nil
+		}
+	}
+	return nil, fmt.Errorf("cluster %q not found", awssdk.ToString(input.Name))
 }
 
 func (m *mockEcs) ListClusters(_ context.Context, _ *ecs.ListClustersInput, _ ...func(*ecs.Options)) (*ecs.ListClustersOutput, error) {

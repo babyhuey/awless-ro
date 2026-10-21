@@ -28,6 +28,12 @@ type AWSAPI struct {
 	Acm            AcmAPI
 	Cloudwatchlogs CloudwatchlogsAPI
 	Cloudtrail     CloudtrailAPI
+	Efs            EfsAPI
+	Secretsmanager SecretsmanagerAPI
+	Ssm            SsmAPI
+	Dynamodb       DynamodbAPI
+	Eks            EksAPI
+	Apigatewayv2   Apigatewayv2API
 	Kms            KmsAPI
 }
 

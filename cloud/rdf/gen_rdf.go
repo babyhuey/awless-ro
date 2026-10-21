@@ -48,6 +48,7 @@ const (
 	AvailabilityZone                  = "cloud:availabilityZone"
 	AvailabilityZones                 = "cloud:availabilityZones"
 	BackupRetentionPeriod             = "cloud:backupRetentionPeriod"
+	BillingMode                       = "cloud:billingMode"
 	Bucket                            = "cloud:bucketName"
 	CallerReference                   = "cloud:callerReference"
 	Capabilities                      = "cloud:capabilities"
@@ -120,6 +121,7 @@ const (
 	InsufficientDataActions           = "cloud:insufficientDataActions"
 	IOPS                              = "cloud:iops"
 	IPType                            = "net:ipType"
+	ItemCount                         = "cloud:itemCount"
 	IPv6Addresses                     = "cloud:ipv6Addresses"
 	IPv6Enabled                       = "cloud:ipv6Enabled"
 	Key                               = "cloud:key"
@@ -128,6 +130,9 @@ const (
 	KeyPair                           = "cloud:keyPair"
 	KeySpec                           = "cloud:keySpec"
 	KeyUsage                          = "cloud:keyUsage"
+	KMSKey                            = "cloud:kmsKey"
+	LastAccessed                      = "cloud:lastAccessed"
+	LastRotated                       = "cloud:lastRotated"
 	LatestRestorableTime              = "cloud:latestRestorableTime"
 	LaunchConfigurationName           = "cloud:launchConfigurationName"
 	Launched                          = "cloud:launched"
@@ -144,6 +149,7 @@ const (
 	MetricName                        = "cloud:metricName"
 	MinSize                           = "cloud:minSize"
 	Modified                          = "cloud:modified"
+	ModifiedBy                        = "cloud:modifiedBy"
 	MonitoringInterval                = "cloud:monitoringInterval"
 	MonitoringRole                    = "cloud:monitoringRole"
 	MultiAZ                           = "cloud:multiAZ"
@@ -166,7 +172,9 @@ const (
 	Path                              = "cloud:path"
 	PathPrefix                        = "cloud:pathPrefix"
 	PendingTasksCount                 = "cloud:pendingTasksCount"
+	PerformanceMode                   = "cloud:performanceMode"
 	PlacementGroup                    = "cloud:placementGroup"
+	PlatformVersion                   = "cloud:platformVersion"
 	Port                              = "net:port"
 	Ports                             = "net:ports"
 	PortRange                         = "net:portRange"
@@ -192,6 +200,7 @@ const (
 	Roles                             = "cloud:roles"
 	RootDevice                        = "cloud:rootDevice"
 	RootDeviceType                    = "cloud:rootDeviceType"
+	RotationEnabled                   = "cloud:rotationEnabled"
 	Routes                            = "net:routes"
 	RunningTasksCount                 = "cloud:runningTasksCount"
 	Runtime                           = "cloud:runtime"
@@ -215,6 +224,8 @@ const (
 	Subnets                           = "cloud:subnets"
 	Tags                              = "cloud:tags"
 	TargetGroups                      = "cloud:targetGroups"
+	ThroughputMode                    = "cloud:throughputMode"
+	Tier                              = "cloud:tier"
 	Timeout                           = "cloud:timezone"
 	Timezone                          = "cloud:timeout"
 	TLSVersionRequired                = "cloud:tlsVersionRequired"
@@ -269,6 +280,7 @@ func init() {
 		properties.AvailabilityZone:                  AvailabilityZone,
 		properties.AvailabilityZones:                 AvailabilityZones,
 		properties.BackupRetentionPeriod:             BackupRetentionPeriod,
+		properties.BillingMode:                       BillingMode,
 		properties.Bucket:                            Bucket,
 		properties.CallerReference:                   CallerReference,
 		properties.Capabilities:                      Capabilities,
@@ -341,6 +353,7 @@ func init() {
 		properties.InsufficientDataActions:           InsufficientDataActions,
 		properties.IOPS:                              IOPS,
 		properties.IPType:                            IPType,
+		properties.ItemCount:                         ItemCount,
 		properties.IPv6Addresses:                     IPv6Addresses,
 		properties.IPv6Enabled:                       IPv6Enabled,
 		properties.Key:                               Key,
@@ -349,6 +362,9 @@ func init() {
 		properties.KeyPair:                           KeyPair,
 		properties.KeySpec:                           KeySpec,
 		properties.KeyUsage:                          KeyUsage,
+		properties.KMSKey:                            KMSKey,
+		properties.LastAccessed:                      LastAccessed,
+		properties.LastRotated:                       LastRotated,
 		properties.LatestRestorableTime:              LatestRestorableTime,
 		properties.LaunchConfigurationName:           LaunchConfigurationName,
 		properties.Launched:                          Launched,
@@ -365,6 +381,7 @@ func init() {
 		properties.MetricName:                        MetricName,
 		properties.MinSize:                           MinSize,
 		properties.Modified:                          Modified,
+		properties.ModifiedBy:                        ModifiedBy,
 		properties.MonitoringInterval:                MonitoringInterval,
 		properties.MonitoringRole:                    MonitoringRole,
 		properties.MultiAZ:                           MultiAZ,
@@ -387,7 +404,9 @@ func init() {
 		properties.Path:                              Path,
 		properties.PathPrefix:                        PathPrefix,
 		properties.PendingTasksCount:                 PendingTasksCount,
+		properties.PerformanceMode:                   PerformanceMode,
 		properties.PlacementGroup:                    PlacementGroup,
+		properties.PlatformVersion:                   PlatformVersion,
 		properties.Port:                              Port,
 		properties.Ports:                             Ports,
 		properties.PortRange:                         PortRange,
@@ -413,6 +432,7 @@ func init() {
 		properties.Roles:                             Roles,
 		properties.RootDevice:                        RootDevice,
 		properties.RootDeviceType:                    RootDeviceType,
+		properties.RotationEnabled:                   RotationEnabled,
 		properties.Routes:                            Routes,
 		properties.RunningTasksCount:                 RunningTasksCount,
 		properties.Runtime:                           Runtime,
@@ -436,6 +456,8 @@ func init() {
 		properties.Subnets:                           Subnets,
 		properties.Tags:                              Tags,
 		properties.TargetGroups:                      TargetGroups,
+		properties.ThroughputMode:                    ThroughputMode,
+		properties.Tier:                              Tier,
 		properties.Timeout:                           Timeout,
 		properties.Timezone:                          Timezone,
 		properties.TLSVersionRequired:                TLSVersionRequired,
@@ -490,6 +512,7 @@ var Properties = RDFProperties{
 	AvailabilityZone:                  {ID: AvailabilityZone, RdfType: "rdf:Property", RdfsLabel: "AvailabilityZone", RdfsDefinedBy: "rdfs:Class", RdfsDataType: "xsd:string"},
 	AvailabilityZones:                 {ID: AvailabilityZones, RdfType: "rdf:Property", RdfsLabel: "AvailabilityZones", RdfsDefinedBy: "rdfs:list", RdfsDataType: "rdfs:Class"},
 	BackupRetentionPeriod:             {ID: BackupRetentionPeriod, RdfType: "rdf:Property", RdfsLabel: "BackupRetentionPeriod", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:dateTime"},
+	BillingMode:                       {ID: BillingMode, RdfType: "rdf:Property", RdfsLabel: "BillingMode", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	Bucket:                            {ID: Bucket, RdfType: "rdf:Property", RdfsLabel: "Bucket", RdfsDefinedBy: "rdfs:Class", RdfsDataType: "xsd:string"},
 	CallerReference:                   {ID: CallerReference, RdfType: "rdf:Property", RdfsLabel: "CallerReference", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	Capabilities:                      {ID: Capabilities, RdfType: "rdf:Property", RdfsLabel: "Capabilities", RdfsDefinedBy: "rdfs:list", RdfsDataType: "xsd:string"},
@@ -562,6 +585,7 @@ var Properties = RDFProperties{
 	InsufficientDataActions:           {ID: InsufficientDataActions, RdfType: "rdf:Property", RdfsLabel: "InsufficientDataActions", RdfsDefinedBy: "rdfs:list", RdfsDataType: "xsd:string"},
 	IOPS:                              {ID: IOPS, RdfType: "rdf:Property", RdfsLabel: "IOPS", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:int"},
 	IPType:                            {ID: IPType, RdfType: "rdf:Property", RdfsLabel: "IPType", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
+	ItemCount:                         {ID: ItemCount, RdfType: "rdf:Property", RdfsLabel: "ItemCount", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:int"},
 	IPv6Addresses:                     {ID: IPv6Addresses, RdfType: "rdf:Property", RdfsLabel: "IPv6Addresses", RdfsDefinedBy: "rdfs:list", RdfsDataType: "xsd:string"},
 	IPv6Enabled:                       {ID: IPv6Enabled, RdfType: "rdf:Property", RdfsLabel: "IPv6Enabled", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:boolean"},
 	Key:                               {ID: Key, RdfType: "rdf:Property", RdfsLabel: "Key", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
@@ -570,6 +594,9 @@ var Properties = RDFProperties{
 	KeyPair:                           {ID: KeyPair, RdfType: "rdf:Property", RdfsLabel: "KeyPair", RdfsDefinedBy: "rdfs:Class", RdfsDataType: "xsd:string"},
 	KeySpec:                           {ID: KeySpec, RdfType: "rdf:Property", RdfsLabel: "KeySpec", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	KeyUsage:                          {ID: KeyUsage, RdfType: "rdf:Property", RdfsLabel: "KeyUsage", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
+	KMSKey:                            {ID: KMSKey, RdfType: "rdf:Property", RdfsLabel: "KMSKey", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
+	LastAccessed:                      {ID: LastAccessed, RdfType: "rdf:Property", RdfsLabel: "LastAccessed", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:dateTime"},
+	LastRotated:                       {ID: LastRotated, RdfType: "rdf:Property", RdfsLabel: "LastRotated", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:dateTime"},
 	LatestRestorableTime:              {ID: LatestRestorableTime, RdfType: "rdf:Property", RdfsLabel: "LatestRestorableTime", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:dateTime"},
 	LaunchConfigurationName:           {ID: LaunchConfigurationName, RdfType: "rdf:Property", RdfsLabel: "LaunchConfigurationName", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	Launched:                          {ID: Launched, RdfType: "rdf:Property", RdfsLabel: "Launched", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:dateTime"},
@@ -586,6 +613,7 @@ var Properties = RDFProperties{
 	MetricName:                        {ID: MetricName, RdfType: "rdf:Property", RdfsLabel: "MetricName", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	MinSize:                           {ID: MinSize, RdfType: "rdf:Property", RdfsLabel: "MinSize", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:int"},
 	Modified:                          {ID: Modified, RdfType: "rdf:Property", RdfsLabel: "Modified", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:dateTime"},
+	ModifiedBy:                        {ID: ModifiedBy, RdfType: "rdf:Property", RdfsLabel: "ModifiedBy", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	MonitoringInterval:                {ID: MonitoringInterval, RdfType: "rdf:Property", RdfsLabel: "MonitoringInterval", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	MonitoringRole:                    {ID: MonitoringRole, RdfType: "rdf:Property", RdfsLabel: "MonitoringRole", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	MultiAZ:                           {ID: MultiAZ, RdfType: "rdf:Property", RdfsLabel: "MultiAZ", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
@@ -608,7 +636,9 @@ var Properties = RDFProperties{
 	Path:                              {ID: Path, RdfType: "rdf:Property", RdfsLabel: "Path", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	PathPrefix:                        {ID: PathPrefix, RdfType: "rdf:Property", RdfsLabel: "PathPrefix", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	PendingTasksCount:                 {ID: PendingTasksCount, RdfType: "rdf:Property", RdfsLabel: "PendingTasksCount", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:int"},
+	PerformanceMode:                   {ID: PerformanceMode, RdfType: "rdf:Property", RdfsLabel: "PerformanceMode", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	PlacementGroup:                    {ID: PlacementGroup, RdfType: "rdf:Property", RdfsLabel: "PlacementGroup", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
+	PlatformVersion:                   {ID: PlatformVersion, RdfType: "rdf:Property", RdfsLabel: "PlatformVersion", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	Port:                              {ID: Port, RdfType: "rdf:Property", RdfsLabel: "Port", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:int"},
 	Ports:                             {ID: Ports, RdfType: "rdf:Property", RdfsLabel: "Ports", RdfsDefinedBy: "rdfs:list", RdfsDataType: "xsd:string"},
 	PortRange:                         {ID: PortRange, RdfType: "rdfs:subPropertyOf", RdfsLabel: "PortRange", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
@@ -634,6 +664,7 @@ var Properties = RDFProperties{
 	Roles:                             {ID: Roles, RdfType: "rdf:Property", RdfsLabel: "Roles", RdfsDefinedBy: "rdfs:list", RdfsDataType: "rdfs:Class"},
 	RootDevice:                        {ID: RootDevice, RdfType: "rdf:Property", RdfsLabel: "RootDevice", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	RootDeviceType:                    {ID: RootDeviceType, RdfType: "rdf:Property", RdfsLabel: "RootDeviceType", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
+	RotationEnabled:                   {ID: RotationEnabled, RdfType: "rdf:Property", RdfsLabel: "RotationEnabled", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:boolean"},
 	Routes:                            {ID: Routes, RdfType: "rdf:Property", RdfsLabel: "Routes", RdfsDefinedBy: "rdfs:list", RdfsDataType: "net-owl:Route"},
 	RunningTasksCount:                 {ID: RunningTasksCount, RdfType: "rdf:Property", RdfsLabel: "RunningTasksCount", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:int"},
 	Runtime:                           {ID: Runtime, RdfType: "rdf:Property", RdfsLabel: "Runtime", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
@@ -657,6 +688,8 @@ var Properties = RDFProperties{
 	Subnets:                           {ID: Subnets, RdfType: "rdf:Property", RdfsLabel: "Subnets", RdfsDefinedBy: "rdfs:list", RdfsDataType: "rdfs:Class"},
 	Tags:                              {ID: Tags, RdfType: "rdf:Property", RdfsLabel: "Tags", RdfsDefinedBy: "rdfs:list", RdfsDataType: "xsd:string"},
 	TargetGroups:                      {ID: TargetGroups, RdfType: "rdf:Property", RdfsLabel: "TargetGroups", RdfsDefinedBy: "rdfs:list", RdfsDataType: "xsd:string"},
+	ThroughputMode:                    {ID: ThroughputMode, RdfType: "rdf:Property", RdfsLabel: "ThroughputMode", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
+	Tier:                              {ID: Tier, RdfType: "rdf:Property", RdfsLabel: "Tier", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	Timeout:                           {ID: Timeout, RdfType: "rdf:Property", RdfsLabel: "Timeout", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:int"},
 	Timezone:                          {ID: Timezone, RdfType: "rdf:Property", RdfsLabel: "Timezone", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	TLSVersionRequired:                {ID: TLSVersionRequired, RdfType: "rdf:Property", RdfsLabel: "TLSVersionRequired", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},

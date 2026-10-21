@@ -10,8 +10,14 @@ import (
 	"time"
 
 	awssdk "github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
+	apigatewayv2types "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	dynamodbtypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	ecstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	"github.com/aws/aws-sdk-go-v2/service/eks"
+	ekstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	elbv2types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -859,6 +865,148 @@ func addManualCloudformationFetchFuncs(conf *Config, funcs map[string]fetch.Func
 }
 func addManualCloudtrailFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 }
+func addManualEfsFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
+}
+func addManualSecretsmanagerFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
+}
+func addManualSsmFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
+}
+func addManualDynamodbFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
+	funcs["table"] = func(ctx context.Context, cache fetch.Cache) ([]*graph.Resource, interface{}, error) {
+		var resources []*graph.Resource
+		var objects []dynamodbtypes.TableDescription
+
+		if !conf.getBoolDefaultTrue("aws.dynamodb.table.sync") && !getBoolFromContext(ctx, "force") {
+			conf.Log.Verbose("sync: *disabled* for resource dynamodb[table]")
+			return resources, objects, nil
+		}
+
+		var names []string
+		paginator := dynamodb.NewListTablesPaginator(conf.APIs.Dynamodb, &dynamodb.ListTablesInput{})
+		for paginator.HasMorePages() {
+			out, err := paginator.NextPage(ctx)
+			if err != nil {
+				return resources, objects, err
+			}
+			names = append(names, out.TableNames...)
+		}
+
+		var mu sync.Mutex
+		err := forEachParallel(ctx, names, func(ctx context.Context, name string) error {
+			out, err := conf.APIs.Dynamodb.DescribeTable(ctx, &dynamodb.DescribeTableInput{TableName: awssdk.String(name)})
+			// A table can be deleted between listing and describing it; that is
+			// not a sync failure.
+			var notFound *dynamodbtypes.ResourceNotFoundException
+			if errors.As(err, &notFound) {
+				return nil
+			}
+			if err != nil {
+				return fmt.Errorf("describe table %s: %w", name, err)
+			}
+			if out.Table == nil {
+				return nil
+			}
+			res, err := awsconv.NewResource(*out.Table)
+			if err != nil {
+				return err
+			}
+			mu.Lock()
+			objects = append(objects, *out.Table)
+			resources = append(resources, res)
+			mu.Unlock()
+			return nil
+		})
+		return resources, objects, err
+	}
+}
+func addManualEksFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
+	funcs["ekscluster"] = func(ctx context.Context, cache fetch.Cache) ([]*graph.Resource, interface{}, error) {
+		var resources []*graph.Resource
+		var objects []ekstypes.Cluster
+
+		if !conf.getBoolDefaultTrue("aws.eks.ekscluster.sync") && !getBoolFromContext(ctx, "force") {
+			conf.Log.Verbose("sync: *disabled* for resource eks[ekscluster]")
+			return resources, objects, nil
+		}
+
+		var names []string
+		clusters := eks.NewListClustersPaginator(conf.APIs.Eks, &eks.ListClustersInput{})
+		for clusters.HasMorePages() {
+			out, err := clusters.NextPage(ctx)
+			if err != nil {
+				return resources, objects, err
+			}
+			names = append(names, out.Clusters...)
+		}
+
+		var mu sync.Mutex
+		err := forEachParallel(ctx, names, func(ctx context.Context, name string) error {
+			out, err := conf.APIs.Eks.DescribeCluster(ctx, &eks.DescribeClusterInput{Name: awssdk.String(name)})
+			// A cluster can be deleted between listing and describing it; that
+			// is not a sync failure.
+			var notFound *ekstypes.ResourceNotFoundException
+			if errors.As(err, &notFound) {
+				return nil
+			}
+			if err != nil {
+				return err
+			}
+			if out.Cluster == nil {
+				return nil
+			}
+			res, err := awsconv.NewResource(*out.Cluster)
+			if err != nil {
+				return err
+			}
+			mu.Lock()
+			objects = append(objects, *out.Cluster)
+			resources = append(resources, res)
+			mu.Unlock()
+			return nil
+		})
+		return resources, objects, err
+	}
+}
+
+func addManualApigatewayv2FetchFuncs(conf *Config, funcs map[string]fetch.Func) {
+	funcs["api"] = func(ctx context.Context, cache fetch.Cache) ([]*graph.Resource, interface{}, error) {
+		var objects []apigatewayv2types.Api
+		var resources []*graph.Resource
+
+		if !conf.getBoolDefaultTrue("aws.apigatewayv2.api.sync") && !getBoolFromContext(ctx, "force") {
+			conf.Log.Verbose("sync: *disabled* for resource apigatewayv2[api]")
+			return resources, objects, nil
+		}
+
+		// GetApis pages with NextToken but the SDK has no paginator for it, so the
+		// loop stops on a repeated token the way generated paginators do.
+		input := &apigatewayv2.GetApisInput{}
+		for {
+			out, err := conf.APIs.Apigatewayv2.GetApis(ctx, input)
+			if err != nil {
+				return resources, objects, err
+			}
+
+			for _, api := range out.Items {
+				objects = append(objects, api)
+				res, err := awsconv.NewResource(api)
+				if err != nil {
+					return resources, objects, err
+				}
+				resources = append(resources, res)
+			}
+
+			next := awssdk.ToString(out.NextToken)
+			if next == "" || next == awssdk.ToString(input.NextToken) {
+				break
+			}
+			input.NextToken = out.NextToken
+		}
+
+		return resources, objects, nil
+	}
+}
+
 func addManualKmsFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 	funcs["kmskey"] = func(ctx context.Context, cache fetch.Cache) ([]*graph.Resource, interface{}, error) {
 		var resources []*graph.Resource
