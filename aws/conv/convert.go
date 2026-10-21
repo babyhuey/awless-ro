@@ -315,7 +315,7 @@ func NewResource(source interface{}) (*graph.Resource, error) {
 			defer wg.Done()
 			if t.transform != nil {
 				sourceField := nodeV.FieldByName(t.name)
-				if sourceField.IsValid() && !isAbsent(sourceField) {
+				if sourceField.IsValid() && (t.keepZero || !isAbsent(sourceField)) {
 					val, err := t.transform(sourceField.Interface())
 					if err == ErrTagNotFound {
 						return
@@ -376,6 +376,9 @@ type propertyTransform struct {
 	name      string
 	transform transformFn
 	fetch     fetchFn
+	// keepZero extracts a zero value instead of treating it as absent. Only set
+	// it on non-pointer fields where zero is a real reading.
+	keepZero bool
 }
 
 type transformFn func(i interface{}) (interface{}, error)
