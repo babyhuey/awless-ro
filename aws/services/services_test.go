@@ -1232,18 +1232,19 @@ func TestBuildCloudtrailGraph(t *testing.T) {
 func TestBuildEfsGraph(t *testing.T) {
 	created := time.Now().UTC().Truncate(time.Second)
 	filesystems := []efstypes.FileSystemDescription{
-		{FileSystemId: awssdk.String("fs_1"), LifeCycleState: efstypes.LifeCycleStateCreating},
+		{FileSystemId: awssdk.String("fs_1"), LifeCycleState: efstypes.LifeCycleStateCreating, AvailabilityZoneName: awssdk.String("eu-west-1a")},
 		{
-			FileSystemId:    awssdk.String("fs_2"),
-			FileSystemArn:   awssdk.String("arn:aws:elasticfilesystem:eu-west-1:1:file-system/fs_2"),
-			Name:            awssdk.String("shared-home"),
-			LifeCycleState:  efstypes.LifeCycleStateAvailable,
-			SizeInBytes:     &efstypes.FileSystemSize{Value: 6144},
-			PerformanceMode: efstypes.PerformanceModeGeneralPurpose,
-			ThroughputMode:  efstypes.ThroughputModeElastic,
-			Encrypted:       awssdk.Bool(true),
-			CreationTime:    awssdk.Time(created),
-			Tags:            []efstypes.Tag{{Key: awssdk.String("Name"), Value: awssdk.String("shared-home")}},
+			FileSystemId:         awssdk.String("fs_2"),
+			NumberOfMountTargets: 3,
+			FileSystemArn:        awssdk.String("arn:aws:elasticfilesystem:eu-west-1:1:file-system/fs_2"),
+			Name:                 awssdk.String("shared-home"),
+			LifeCycleState:       efstypes.LifeCycleStateAvailable,
+			SizeInBytes:          &efstypes.FileSystemSize{Value: 6144},
+			PerformanceMode:      efstypes.PerformanceModeGeneralPurpose,
+			ThroughputMode:       efstypes.ThroughputModeElastic,
+			Encrypted:            awssdk.Bool(true),
+			CreationTime:         awssdk.Time(created),
+			Tags:                 []efstypes.Tag{{Key: awssdk.String("Name"), Value: awssdk.String("shared-home")}},
 		},
 	}
 
@@ -1265,9 +1266,9 @@ func TestBuildEfsGraph(t *testing.T) {
 	}
 
 	expected := map[string]cloud.Resource{
-		"fs_1": resourcetest.FileSystem("fs_1").Prop(p.State, "creating").Build(),
+		"fs_1": resourcetest.FileSystem("fs_1").Prop(p.State, "creating").Prop(p.MountTargetCount, 0).Prop(p.AvailabilityZone, "eu-west-1a").Build(),
 		"fs_2": resourcetest.FileSystem("fs_2").Prop(p.Arn, "arn:aws:elasticfilesystem:eu-west-1:1:file-system/fs_2").Prop(p.Name, "shared-home").
-			Prop(p.State, "available").Prop(p.Size, 6144).Prop(p.PerformanceMode, "generalPurpose").Prop(p.ThroughputMode, "elastic").
+			Prop(p.State, "available").Prop(p.MountTargetCount, 3).Prop(p.Size, 6144).Prop(p.PerformanceMode, "generalPurpose").Prop(p.ThroughputMode, "elastic").
 			Prop(p.Encrypted, true).Prop(p.Created, created).Prop(p.Tags, []string{"Name=shared-home"}).Build(),
 	}
 

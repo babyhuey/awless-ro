@@ -567,15 +567,17 @@ var awsResourcesDef = map[string]map[string]*propertyTransform{
 	},
 	// EFS
 	cloud.FileSystem: {
-		properties.Arn:             {name: "FileSystemArn", transform: extractValueFn},
-		properties.Name:            {name: "Name", transform: extractValueFn},
-		properties.State:           {name: "LifeCycleState", transform: extractValueFn},
-		properties.Size:            {name: "SizeInBytes", transform: extractFieldFn("Value")},
-		properties.PerformanceMode: {name: "PerformanceMode", transform: extractValueFn},
-		properties.ThroughputMode:  {name: "ThroughputMode", transform: extractValueFn},
-		properties.Encrypted:       {name: "Encrypted", transform: extractValueFn},
-		properties.Created:         {name: "CreationTime", transform: extractTimeFn},
-		properties.Tags:            {name: "Tags", transform: extractTagsFn},
+		properties.Arn:              {name: "FileSystemArn", transform: extractValueFn},
+		properties.Name:             {name: "Name", transform: extractValueFn},
+		properties.State:            {name: "LifeCycleState", transform: extractValueFn},
+		properties.MountTargetCount: {name: "NumberOfMountTargets", transform: extractValueFn, keepZero: true},
+		properties.AvailabilityZone: {name: "AvailabilityZoneName", transform: extractValueFn},
+		properties.Size:             {name: "SizeInBytes", transform: extractFieldFn("Value")},
+		properties.PerformanceMode:  {name: "PerformanceMode", transform: extractValueFn},
+		properties.ThroughputMode:   {name: "ThroughputMode", transform: extractValueFn},
+		properties.Encrypted:        {name: "Encrypted", transform: extractValueFn},
+		properties.Created:          {name: "CreationTime", transform: extractTimeFn},
+		properties.Tags:             {name: "Tags", transform: extractTagsFn},
 	},
 	// Secrets Manager
 	cloud.Secret: {

@@ -150,6 +150,7 @@ const (
 	ModifiedBy                        = "ModifiedBy"
 	MonitoringInterval                = "MonitoringInterval"
 	MonitoringRole                    = "MonitoringRole"
+	MountTargetCount                  = "MountTargetCount"
 	MultiAZ                           = "MultiAZ"
 	MultiRegion                       = "MultiRegion"
 	Name                              = "Name"

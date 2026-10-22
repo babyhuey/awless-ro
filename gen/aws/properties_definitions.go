@@ -147,6 +147,7 @@ var PropertiesDefinitions = []property{
 	{AwlessLabel: "ModifiedBy", RDFLabel: fmt.Sprintf("%s:modifiedBy", rdf.CloudNS), RDFType: rdf.RdfProperty, RdfsDefinedBy: rdf.RdfsLiteral, RdfsDataType: rdf.XsdString},
 	{AwlessLabel: "MonitoringInterval", RDFLabel: fmt.Sprintf("%s:monitoringInterval", rdf.CloudNS), RDFType: rdf.RdfProperty, RdfsDefinedBy: rdf.RdfsLiteral, RdfsDataType: rdf.XsdString},
 	{AwlessLabel: "MonitoringRole", RDFLabel: fmt.Sprintf("%s:monitoringRole", rdf.CloudNS), RDFType: rdf.RdfProperty, RdfsDefinedBy: rdf.RdfsLiteral, RdfsDataType: rdf.XsdString},
+	{AwlessLabel: "MountTargetCount", RDFLabel: fmt.Sprintf("%s:mountTargetCount", rdf.CloudNS), RDFType: rdf.RdfProperty, RdfsDefinedBy: rdf.RdfsLiteral, RdfsDataType: rdf.XsdInt},
 	{AwlessLabel: "MultiAZ", RDFLabel: fmt.Sprintf("%s:multiAZ", rdf.CloudNS), RDFType: rdf.RdfProperty, RdfsDefinedBy: rdf.RdfsLiteral, RdfsDataType: rdf.XsdString},
 	{AwlessLabel: "MultiRegion", RDFLabel: fmt.Sprintf("%s:multiRegion", rdf.CloudNS), RDFType: rdf.RdfProperty, RdfsDefinedBy: rdf.RdfsLiteral, RdfsDataType: rdf.XsdBoolean},
 	{AwlessLabel: "Name", RDFLabel: fmt.Sprintf("%s:name", rdf.CloudNS), RDFType: rdf.RdfProperty, RdfsDefinedBy: rdf.RdfsLiteral, RdfsDataType: rdf.XsdString},

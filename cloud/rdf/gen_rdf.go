@@ -152,6 +152,7 @@ const (
 	ModifiedBy                        = "cloud:modifiedBy"
 	MonitoringInterval                = "cloud:monitoringInterval"
 	MonitoringRole                    = "cloud:monitoringRole"
+	MountTargetCount                  = "cloud:mountTargetCount"
 	MultiAZ                           = "cloud:multiAZ"
 	MultiRegion                       = "cloud:multiRegion"
 	Name                              = "cloud:name"
@@ -384,6 +385,7 @@ func init() {
 		properties.ModifiedBy:                        ModifiedBy,
 		properties.MonitoringInterval:                MonitoringInterval,
 		properties.MonitoringRole:                    MonitoringRole,
+		properties.MountTargetCount:                  MountTargetCount,
 		properties.MultiAZ:                           MultiAZ,
 		properties.MultiRegion:                       MultiRegion,
 		properties.Name:                              Name,
@@ -616,6 +618,7 @@ var Properties = RDFProperties{
 	ModifiedBy:                        {ID: ModifiedBy, RdfType: "rdf:Property", RdfsLabel: "ModifiedBy", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	MonitoringInterval:                {ID: MonitoringInterval, RdfType: "rdf:Property", RdfsLabel: "MonitoringInterval", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	MonitoringRole:                    {ID: MonitoringRole, RdfType: "rdf:Property", RdfsLabel: "MonitoringRole", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
+	MountTargetCount:                  {ID: MountTargetCount, RdfType: "rdf:Property", RdfsLabel: "MountTargetCount", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:int"},
 	MultiAZ:                           {ID: MultiAZ, RdfType: "rdf:Property", RdfsLabel: "MultiAZ", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
 	MultiRegion:                       {ID: MultiRegion, RdfType: "rdf:Property", RdfsLabel: "MultiRegion", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:boolean"},
 	Name:                              {ID: Name, RdfType: "rdf:Property", RdfsLabel: "Name", RdfsDefinedBy: "rdfs:Literal", RdfsDataType: "xsd:string"},
