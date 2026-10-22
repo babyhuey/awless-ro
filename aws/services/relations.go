@@ -163,6 +163,7 @@ var addParentsFns = map[string][]addParentFn{
 	cloud.Table:            {addRegionParent},
 	cloud.EksCluster:       {addRegionParent},
 	cloud.Api:              {addRegionParent},
+	cloud.KmsKey:           {addRegionParent},
 	cloud.MFADevice: {
 		funcBuilder{parent: cloud.User, fieldName: "User.UserId", relation: DEPENDING_ON}.build(),
 	},

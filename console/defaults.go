@@ -80,6 +80,7 @@ var ColumnsInListing = map[string][]string{
 	cloud.Table:               {properties.Name, properties.State, properties.ItemCount, properties.Size, properties.BillingMode, properties.Created},
 	cloud.EksCluster:          {properties.Name, properties.State, properties.Version, properties.PlatformVersion, properties.Created},
 	cloud.Api:                 {properties.ID, properties.Name, properties.Protocol, properties.Endpoint, properties.Created},
+	cloud.KmsKey:              {properties.ID, properties.Name, properties.State, properties.KeyManager, properties.KeyUsage, properties.KeySpec, properties.Created},
 }
 
 var DefaultsColumnDefinitions = map[string][]ColumnDefinition{
@@ -486,7 +487,7 @@ var DefaultsColumnDefinitions = map[string][]ColumnDefinition{
 	cloud.LogGroup: {
 		StringColumnDefinition{Prop: properties.Name},
 		StringColumnDefinition{Prop: properties.Class},
-		StringColumnDefinition{Prop: properties.RetentionDays, Friendly: "Retention (days)"},
+		FallbackColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.RetentionDays, Friendly: "Retention (days)"}, Fallback: "never"},
 		StorageColumnDefinition{Unit: b, StringColumnDefinition: StringColumnDefinition{Prop: properties.Size}},
 		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.Created}},
 	},
@@ -569,6 +570,16 @@ var DefaultsColumnDefinitions = map[string][]ColumnDefinition{
 		StringColumnDefinition{Prop: properties.Name},
 		StringColumnDefinition{Prop: properties.Protocol},
 		StringColumnDefinition{Prop: properties.Endpoint},
+		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.Created}},
+	},
+	//KMS
+	cloud.KmsKey: {
+		StringColumnDefinition{Prop: properties.ID},
+		StringColumnDefinition{Prop: properties.Name},
+		StringColumnDefinition{Prop: properties.State},
+		StringColumnDefinition{Prop: properties.KeyManager, Friendly: "Manager"},
+		StringColumnDefinition{Prop: properties.KeyUsage, Friendly: "Usage"},
+		StringColumnDefinition{Prop: properties.KeySpec, Friendly: "Spec"},
 		TimeColumnDefinition{StringColumnDefinition: StringColumnDefinition{Prop: properties.Created}},
 	},
 }

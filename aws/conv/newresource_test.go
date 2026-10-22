@@ -56,6 +56,7 @@ import (
 	elbtypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	elbv2types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	iamtypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	kmstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	lambdatypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	rdstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	route53types "github.com/aws/aws-sdk-go-v2/service/route53/types"
@@ -252,6 +253,11 @@ var sdkPrototypes = map[string][]func() interface{}{
 	// API Gateway v2
 	cloud.Api: {func() interface{} {
 		return apigatewayv2types.Api{ApiId: awssdk.String("a1b2c3")}
+	}},
+
+	// KMS
+	cloud.KmsKey: {func() interface{} {
+		return kmstypes.KeyMetadata{KeyId: awssdk.String("key-1")}
 	}},
 }
 

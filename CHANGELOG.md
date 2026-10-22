@@ -18,7 +18,13 @@
   (`aws.eks.sync`). (#72)
 - `list apis`: API Gateway v2 HTTP and WebSocket APIs, in a new `apigatewayv2` service
   synced by default (`aws.apigatewayv2.sync`). (#76)
-- `list filesystems` shows each file system's mount target count; `--columns zone` shows the zone of a One Zone file system. (#84)
+- `list kmskeys`: KMS keys with alias, state, manager, usage, spec and creation time, off by default in `sync` (`aws.kms.sync`). (#73)
+- `list filesystems` shows each file system's mount target count; `--columns zone` shows
+  the zone of a One Zone file system. (#84)
+
+### Changed
+
+- `list loggroups` shows `never` for a group with no retention set, as the console does. (#83)
 
 ### Fixed
 

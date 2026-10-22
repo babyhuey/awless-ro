@@ -761,6 +761,33 @@ func TestCSVDisplayWithCommaAndQuotes(t *testing.T) {
 	}
 }
 
+// CloudWatch Logs omits retentionInDays for a group that keeps its events forever,
+// and the console calls that "Never expire".
+func TestLogGroupWithoutRetentionShowsNever(t *testing.T) {
+	g := graph.NewGraph()
+	g.AddResource(
+		resourcetest.LogGroup("/app/api").Prop(p.Name, "/app/api").Prop(p.RetentionDays, 30).Build(),
+		resourcetest.LogGroup("/app/audit").Prop(p.Name, "/app/audit").Build(),
+	)
+
+	displayer, _ := BuildOptions(
+		WithRdfType("loggroup"),
+		WithColumns([]string{"Name", "RetentionDays"}),
+		WithFormat("csv"),
+	).SetSource(g).Build()
+
+	expected := "Name,Retention (days)\n" +
+		"/app/api,30\n" +
+		"/app/audit,never\n"
+	var w bytes.Buffer
+	if err := displayer.Print(&w); err != nil {
+		t.Fatal(err)
+	}
+	if got, want := w.String(), expected; got != want {
+		t.Fatalf("got \n[%q]\n\nwant\n\n[%q]\n", got, want)
+	}
+}
+
 func createInfraGraph() *graph.Graph {
 	g := graph.NewGraph()
 	g.AddResource(resourcetest.Region("eu-west-1").Build(),

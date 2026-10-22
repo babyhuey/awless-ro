@@ -17,11 +17,14 @@ import (
 	elbv2types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	iamtypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
+	kmstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	route53types "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/aws/smithy-go"
 )
 
 // The hand-written half of the service mocks: the canned answers for the
@@ -86,6 +89,13 @@ type manualDynamodbMock struct {
 
 type manualEksMock struct {
 	clusters []ekstypes.Cluster
+}
+
+type manualKmsMock struct {
+	keys    []kmstypes.KeyMetadata
+	aliases []kmstypes.AliasListEntry
+	denied  map[string]bool
+	deleted []kmstypes.KeyListEntry
 }
 
 type manualSqsMock struct {
@@ -168,6 +178,31 @@ func (m *mockS3) ListBuckets(_ context.Context, input *s3.ListBucketsInput, _ ..
 
 func (m *mockS3) ListObjectsV2(_ context.Context, input *s3.ListObjectsV2Input, _ ...func(*s3.Options)) (*s3.ListObjectsV2Output, error) {
 	return &s3.ListObjectsV2Output{Contents: m.objects[awssdk.ToString(input.Bucket)]}, nil
+}
+
+func (m *mockKms) ListKeys(_ context.Context, _ *kms.ListKeysInput, _ ...func(*kms.Options)) (*kms.ListKeysOutput, error) {
+	var keys []kmstypes.KeyListEntry
+	for _, k := range m.keys {
+		keys = append(keys, kmstypes.KeyListEntry{KeyId: k.KeyId, KeyArn: k.Arn})
+	}
+	keys = append(keys, m.deleted...)
+	return &kms.ListKeysOutput{Keys: keys}, nil
+}
+
+func (m *mockKms) DescribeKey(_ context.Context, input *kms.DescribeKeyInput, _ ...func(*kms.Options)) (*kms.DescribeKeyOutput, error) {
+	if m.denied[awssdk.ToString(input.KeyId)] {
+		return nil, &smithy.GenericAPIError{Code: "AccessDeniedException"}
+	}
+	for _, k := range m.keys {
+		if awssdk.ToString(k.KeyId) == awssdk.ToString(input.KeyId) {
+			return &kms.DescribeKeyOutput{KeyMetadata: &k}, nil
+		}
+	}
+	return nil, &kmstypes.NotFoundException{Message: input.KeyId}
+}
+
+func (m *mockKms) ListAliases(_ context.Context, _ *kms.ListAliasesInput, _ ...func(*kms.Options)) (*kms.ListAliasesOutput, error) {
+	return &kms.ListAliasesOutput{Aliases: m.aliases}, nil
 }
 
 func (m *mockSqs) ListQueues(_ context.Context, _ *sqs.ListQueuesInput, _ ...func(*sqs.Options)) (*sqs.ListQueuesOutput, error) {

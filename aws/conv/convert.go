@@ -68,6 +68,7 @@ import (
 	elbtypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	elbv2types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	iamtypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	kmstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	lambdatypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	rdstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	route53types "github.com/aws/aws-sdk-go-v2/service/route53/types"
@@ -271,6 +272,9 @@ func InitResource(source interface{}) (*graph.Resource, error) {
 	// API Gateway v2
 	case apigatewayv2types.Api:
 		res = graph.InitResource(cloud.Api, awssdk.ToString(ss.ApiId))
+	// KMS
+	case kmstypes.KeyMetadata:
+		res = graph.InitResource(cloud.KmsKey, awssdk.ToString(ss.KeyId))
 	default:
 		return nil, fmt.Errorf("unknown type of resource %T", source)
 	}
