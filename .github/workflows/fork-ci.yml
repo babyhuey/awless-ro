@@ -1,0 +1,56 @@
+name: fork-ci
+
+# Fork-only: runs upstream's CI gates against any branch on demand, so a branch can be
+# verified on a runner before a pull request exists. Never merged upstream.
+on:
+  workflow_dispatch:
+    inputs:
+      target_ref:
+        description: branch or SHA to test
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.target_ref }}
+      - name: checked-out SHA
+        run: echo "checked-out SHA $(git rev-parse HEAD)"
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: '1.26'
+          check-latest: true
+      - name: gofmt -s
+        run: |
+          unformatted=$(gofmt -s -l .)
+          if [ -n "$unformatted" ]; then
+            echo "these files are not gofmt -s clean:"
+            echo "$unformatted"
+            exit 1
+          fi
+      - name: go mod verify
+        run: go mod verify
+      - name: go vet
+        run: go vet ./...
+      - name: go build
+        run: go build ./...
+      - name: go test
+        run: go test ./... -race
+      - name: generated files are up to date
+        run: |
+          make generate
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "generated files are stale: run 'make generate' and commit the result"
+            git status --porcelain
+            git diff
+            exit 1
+          fi
+      - name: govulncheck
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 ./...
+      - name: actionlint
+        run: go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
