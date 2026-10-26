@@ -27,6 +27,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/theazz/awless-ro/aws/config"
+	"github.com/theazz/awless-ro/aws/services"
 	"github.com/theazz/awless-ro/cloud"
 	"github.com/theazz/awless-ro/cloud/properties"
 	"github.com/theazz/awless-ro/cloud/rdf"
@@ -381,7 +382,59 @@ func decorateWithSuggestion(err error, ref string) error {
 		}
 
 	}
+	if hint := syncOffHint(ref); hint != "" {
+		buf.WriteString("\n\t" + hint)
+	}
 	return errors.New(buf.String())
+}
+
+// syncOffHint explains a miss that sync being off could cause: `list` fetches with
+// force and finds resources that `show`, which reads only the local graph, never
+// sees. An ARN names its service, which narrows the answer; any other reference
+// could belong to any service, so every service that is off is named.
+func syncOffHint(ref string) string {
+	if service, ok := serviceOfARN(ref); ok {
+		key, off := syncDisabledFor(service, "")
+		if !off {
+			return ""
+		}
+		types := awsservices.ResourceTypesPerServiceName()[service]
+		if len(types) != 1 {
+			return fmt.Sprintf("%s is off, so resources of this service are not in the local graph: `awless-ro config set %s true` then `awless-ro sync`, or `awless-ro list <type>`.", key, key)
+		}
+		plural := cloud.PluralizeResource(types[0])
+		return fmt.Sprintf("%s is off, so %s are not in the local graph: `awless-ro config set %s true` then `awless-ro sync`, or `awless-ro list %s`.", key, plural, key, plural)
+	}
+
+	names := append([]string(nil), awsservices.ServiceNames...)
+	sort.Strings(names)
+	var keys []string
+	for _, name := range names {
+		if key, off := syncDisabledFor(name, ""); off {
+			keys = append(keys, key)
+		}
+	}
+	switch len(keys) {
+	case 0:
+		return ""
+	case 1:
+		return fmt.Sprintf("%s is off, so resources of that service are not in the local graph: `awless-ro config set %s true` then `awless-ro sync`, or `awless-ro list <type>`.", keys[0], keys[0])
+	}
+	return fmt.Sprintf("%s are off, so resources of those services are not in the local graph: `awless-ro config set <key> true` then `awless-ro sync`, or `awless-ro list <type>`.", strings.Join(keys, ", "))
+}
+
+// serviceOfARN maps the service segment of an ARN to the awless service that syncs it.
+// CloudWatch Logs is the one whose ARN segment ("logs") differs from its API name.
+func serviceOfARN(ref string) (string, bool) {
+	parts := strings.SplitN(ref, ":", 4)
+	if len(parts) < 4 || parts[0] != "arn" {
+		return "", false
+	}
+	if parts[2] == "logs" {
+		parts[2] = "cloudwatchlogs"
+	}
+	service, ok := awsservices.ServicePerAPI[parts[2]]
+	return service, ok
 }
 
 func printResourceList(title string, list []cloud.Resource, shortenListMsg ...string) {

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- `show` says when a missing resource may be absent because its service's `aws.<service>.sync`
+  is off, and how to turn it on. (#89)
+
 ## v0.6.0
 
 ### Added
