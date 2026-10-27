@@ -76,6 +76,14 @@ func (b *Builder) buildQuery() (cloud.Query, error) {
 		if parsed, ok := match.ParseFilter(f); ok {
 			name, val := strings.TrimSpace(strings.Title(parsed.Key)), strings.TrimSpace(parsed.Value)
 			key := ColumnDefinitions(b.columnDefinitions).resolveKey(name)
+			if key == "" {
+				// Not a printed column: resolve it as --columns does, so the two
+				// flags accept the same names.
+				prop := canonicalPropertyName(name)
+				if _, known := rdf.Labels[prop]; known {
+					key = prop
+				}
+			}
 
 			if key != "" {
 				matchers = append(matchers, match.PropertyFilter(key, val, parsed.Exact))
@@ -84,7 +92,7 @@ func (b *Builder) buildQuery() (cloud.Query, error) {
 				for _, h := range b.columnDefinitions {
 					allowed = append(allowed, h.propKey())
 				}
-				return cloud.Query{}, fmt.Errorf("Invalid filter key '%s'. Expecting any of: %s. (Note: filter keys/values are case insensitive)", name, strings.Join(allowed, ", "))
+				return cloud.Query{}, fmt.Errorf("Invalid filter key '%s'. Expecting any of: %s, or any other known property name. (Note: filter keys/values are case insensitive)", name, strings.Join(allowed, ", "))
 			}
 		}
 	}

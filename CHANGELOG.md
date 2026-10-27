@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- `list --filter` accepts any property a resource carries, not only the printed columns. (#90)
+
 ## v0.6.0
 
 ### Added
