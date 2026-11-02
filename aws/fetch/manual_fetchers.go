@@ -603,6 +603,7 @@ func addManualAccessFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 		// stop on a hasError flag that the per-user goroutines wrote and the paging
 		// loop read without synchronisation.
 		var mu sync.Mutex
+		var denied []string
 		err := forEachParallel(ctx, users, func(ctx context.Context, u iamtypes.User) error {
 			userRes, err := awsconv.InitResource(u)
 			if err != nil {
@@ -611,6 +612,14 @@ func addManualAccessFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 			keys := iam.NewListAccessKeysPaginator(conf.APIs.Iam, &iam.ListAccessKeysInput{UserName: u.UserName})
 			for keys.HasMorePages() {
 				out, err := keys.NextPage(ctx)
+				// A policy scoped to some users can deny ListAccessKeys on the rest
+				// to a role that may list them all; those users show no keys.
+				if IsAccessDenied(err) {
+					mu.Lock()
+					denied = append(denied, awssdk.ToString(u.UserName))
+					mu.Unlock()
+					return nil
+				}
 				if err != nil {
 					return err
 				}
@@ -628,6 +637,10 @@ func addManualAccessFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 			}
 			return nil
 		})
+		if len(denied) > 0 {
+			sort.Strings(denied)
+			conf.Log.Warningf("iam: ListAccessKeys was denied for %d user(s), whose keys are left out: %s", len(denied), strings.Join(denied, ", "))
+		}
 		return resources, objects, err
 	}
 }

@@ -11,6 +11,8 @@ import (
 	awssdk "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	dynamodbtypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	iamtypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	sqstypes "github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/theazz/awless-ro/cloud/properties"
@@ -195,6 +197,74 @@ func TestDynamodbAnyOtherErrorStillFailsTheFetch(t *testing.T) {
 	}
 
 	if _, _, err := fetchWithLog(t, NewConfig(&AWSAPI{Dynamodb: api}), BuildDynamodbFetchFuncs, "table"); err == nil {
+		t.Fatal("an error that is not access denied was swallowed")
+	}
+}
+
+// perItemIam lists every user in names and one access key per user, named
+// "key-<user>", with the same denied and broken users as perItemSqs.
+type perItemIam struct {
+	IamAPI
+	names  []string
+	denied map[string]bool
+	broken map[string]bool
+}
+
+func (i perItemIam) ListUsers(_ context.Context, _ *iam.ListUsersInput, _ ...func(*iam.Options)) (*iam.ListUsersOutput, error) {
+	var users []iamtypes.User
+	for _, n := range i.names {
+		users = append(users, iamtypes.User{UserId: awssdk.String("id-" + n), UserName: awssdk.String(n)})
+	}
+	return &iam.ListUsersOutput{Users: users}, nil
+}
+
+func (i perItemIam) ListAccessKeys(_ context.Context, in *iam.ListAccessKeysInput, _ ...func(*iam.Options)) (*iam.ListAccessKeysOutput, error) {
+	name := awssdk.ToString(in.UserName)
+	switch {
+	case i.denied[name]:
+		return nil, apiError{code: "AccessDenied"}
+	case i.broken[name]:
+		return nil, apiError{code: "ServiceFailure"}
+	}
+	return &iam.ListAccessKeysOutput{AccessKeyMetadata: []iamtypes.AccessKeyMetadata{
+		{AccessKeyId: awssdk.String("key-" + name), UserName: in.UserName},
+	}}, nil
+}
+
+// A policy scoped to some users lets a role list them all and list keys only for
+// its own. The other users' keys are left out, the fetch succeeds, and one
+// warning names every user whose keys are missing.
+func TestIamDeniedUserKeysAreSkippedAndWarnedOnce(t *testing.T) {
+	api := perItemIam{
+		names:  []string{"app", "ops-b", "ops-a"},
+		denied: map[string]bool{"ops-a": true, "ops-b": true},
+	}
+
+	resources, warnings, err := fetchWithLog(t, NewConfig(&AWSAPI{Iam: api}), BuildAccessFetchFuncs, "accesskey")
+	if err != nil {
+		t.Fatalf("a user whose keys were denied failed the whole fetch: %v", err)
+	}
+
+	want := []string{"key-app"}
+	if got := sortedIds(resources); fmt.Sprint(got) != fmt.Sprint(want) {
+		t.Fatalf("got %v, want %v", got, want)
+	}
+	if len(warnings) != 1 {
+		t.Fatalf("got %d warnings %q, want exactly one for the whole fetch", len(warnings), warnings)
+	}
+	if !strings.Contains(warnings[0], "ListAccessKeys") || !strings.Contains(warnings[0], "ops-a, ops-b") {
+		t.Errorf("warning %q should name the call and the skipped users, sorted", warnings[0])
+	}
+}
+
+func TestIamAnyOtherErrorStillFailsTheFetch(t *testing.T) {
+	api := perItemIam{
+		names:  []string{"a", "b"},
+		denied: map[string]bool{"a": true},
+		broken: map[string]bool{"b": true},
+	}
+
+	if _, _, err := fetchWithLog(t, NewConfig(&AWSAPI{Iam: api}), BuildAccessFetchFuncs, "accesskey"); err == nil {
 		t.Fatal("an error that is not access denied was swallowed")
 	}
 }
