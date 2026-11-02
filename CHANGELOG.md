@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- `list queues` and `list tables` no longer fail the whole service when a per-item call is denied.
+  Denied queues are listed by URL and denied tables are left out, with one warning. (#87)
+
 ## v0.6.0
 
 ### Added

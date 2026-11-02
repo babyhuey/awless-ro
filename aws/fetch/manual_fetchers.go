@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -716,6 +717,7 @@ func addManualMessagingFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 		}
 
 		var mu sync.Mutex
+		var denied int
 		err := forEachParallel(ctx, queueUrls, func(ctx context.Context, url string) error {
 			res := graph.InitResource(cloud.Queue, url)
 			res.Properties()[properties.ID] = url
@@ -730,6 +732,17 @@ func addManualMessagingFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 			if errors.As(err, &notExist) || errors.As(err, &deleted) {
 				mu.Lock()
 				objects = append(objects, url)
+				mu.Unlock()
+				return nil
+			}
+			// A policy scoped to some queues can deny GetQueueAttributes on the
+			// rest to a role that may list them all; those queues keep the URL
+			// ListQueues returned.
+			if IsAccessDenied(err) {
+				mu.Lock()
+				denied++
+				objects = append(objects, url)
+				resources = append(resources, res)
 				mu.Unlock()
 				return nil
 			}
@@ -776,6 +789,9 @@ func addManualMessagingFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 			mu.Unlock()
 			return nil
 		})
+		if denied > 0 {
+			conf.Log.Warningf("sqs: GetQueueAttributes was denied for %d queue(s); they are listed by URL only", denied)
+		}
 		return resources, objects, err
 	}
 }
@@ -892,12 +908,22 @@ func addManualDynamodbFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 		}
 
 		var mu sync.Mutex
+		var denied []string
 		err := forEachParallel(ctx, names, func(ctx context.Context, name string) error {
 			out, err := conf.APIs.Dynamodb.DescribeTable(ctx, &dynamodb.DescribeTableInput{TableName: awssdk.String(name)})
 			// A table can be deleted between listing and describing it; that is
 			// not a sync failure.
 			var notFound *dynamodbtypes.ResourceNotFoundException
 			if errors.As(err, &notFound) {
+				return nil
+			}
+			// A policy scoped to some tables can deny DescribeTable on the rest to
+			// a role that may list them all. ListTables returns names only and a
+			// table is identified by its ARN, so a denied table is left out.
+			if IsAccessDenied(err) {
+				mu.Lock()
+				denied = append(denied, name)
+				mu.Unlock()
 				return nil
 			}
 			if err != nil {
@@ -916,6 +942,10 @@ func addManualDynamodbFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 			mu.Unlock()
 			return nil
 		})
+		if len(denied) > 0 {
+			sort.Strings(denied)
+			conf.Log.Warningf("dynamodb: DescribeTable was denied for %d table(s), which are left out: %s", len(denied), strings.Join(denied, ", "))
+		}
 		return resources, objects, err
 	}
 }
