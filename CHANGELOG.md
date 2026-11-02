@@ -7,7 +7,8 @@
 - `list queues` and `list tables` no longer fail the whole service when a per-item call is denied.
   Denied queues are listed by URL and denied tables are left out, with one warning. (#87)
 - `list accesskeys` no longer fails when `ListAccessKeys` is denied for some users. Their keys
-  are left out, with one warning naming them. (#92)
+  are left out, with one warning naming them. `list kmskeys` now warns once about keys whose
+  `DescribeKey` was denied, and every such warning names the denied items. (#92)
 
 ## v0.6.0
 

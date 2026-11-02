@@ -18,8 +18,12 @@ package awsfetch
 
 import (
 	"errors"
+	"sort"
+	"strings"
+	"sync"
 
 	"github.com/aws/smithy-go"
+	"github.com/theazz/awless-ro/logger"
 )
 
 // accessDeniedCodes are the error codes AWS services return when the caller's
@@ -46,4 +50,30 @@ func IsAccessDenied(err error) bool {
 		return accessDeniedCodes[apiErr.ErrorCode()]
 	}
 	return false
+}
+
+// deniedItems collects the items a per-item call was denied for during one fetch,
+// so the fetch logs a single warning instead of one per item. Whether a denied
+// item is kept or left out stays up to each fetcher. It is safe for concurrent use.
+type deniedItems struct {
+	mu    sync.Mutex
+	names []string
+}
+
+func (d *deniedItems) add(name string) {
+	d.mu.Lock()
+	d.names = append(d.names, name)
+	d.mu.Unlock()
+}
+
+// warn logs, if anything was denied, one line in the form
+// "<service>: <call> was denied for <n> <kind>(s), <outcome>: <names>".
+func (d *deniedItems) warn(log *logger.Logger, service, call, kind, outcome string) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	if len(d.names) == 0 {
+		return
+	}
+	sort.Strings(d.names)
+	log.Warningf("%s: %s was denied for %d %s(s), %s: %s", service, call, len(d.names), kind, outcome, strings.Join(d.names, ", "))
 }

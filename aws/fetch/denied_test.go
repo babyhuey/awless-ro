@@ -13,6 +13,8 @@ import (
 	dynamodbtypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	iamtypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
+	kmstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	sqstypes "github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/theazz/awless-ro/cloud/properties"
@@ -266,5 +268,69 @@ func TestIamAnyOtherErrorStillFailsTheFetch(t *testing.T) {
 
 	if _, _, err := fetchWithLog(t, NewConfig(&AWSAPI{Iam: api}), BuildAccessFetchFuncs, "accesskey"); err == nil {
 		t.Fatal("an error that is not access denied was swallowed")
+	}
+}
+
+// perItemKms lists every key in ids and describes each by id, with the same
+// denied keys as perItemSqs.
+type perItemKms struct {
+	KmsAPI
+	ids    []string
+	denied map[string]bool
+}
+
+func (k perItemKms) ListAliases(_ context.Context, _ *kms.ListAliasesInput, _ ...func(*kms.Options)) (*kms.ListAliasesOutput, error) {
+	return &kms.ListAliasesOutput{}, nil
+}
+
+func (k perItemKms) ListKeys(_ context.Context, _ *kms.ListKeysInput, _ ...func(*kms.Options)) (*kms.ListKeysOutput, error) {
+	var keys []kmstypes.KeyListEntry
+	for _, id := range k.ids {
+		keys = append(keys, kmstypes.KeyListEntry{KeyId: awssdk.String(id), KeyArn: awssdk.String("arn:aws:kms:eu-west-1:1:key/" + id)})
+	}
+	return &kms.ListKeysOutput{Keys: keys}, nil
+}
+
+func (k perItemKms) DescribeKey(_ context.Context, in *kms.DescribeKeyInput, _ ...func(*kms.Options)) (*kms.DescribeKeyOutput, error) {
+	id := awssdk.ToString(in.KeyId)
+	if k.denied[id] {
+		return nil, apiError{code: "AccessDeniedException"}
+	}
+	return &kms.DescribeKeyOutput{KeyMetadata: &kmstypes.KeyMetadata{KeyId: in.KeyId, Arn: awssdk.String("arn:aws:kms:eu-west-1:1:key/" + id)}}, nil
+}
+
+// A key policy can deny DescribeKey on some keys. Those keys are still listed,
+// as before, and now one warning names them, as for queues and tables.
+func TestKmsDeniedKeyIsKeptAndWarnedOnce(t *testing.T) {
+	api := perItemKms{
+		ids:    []string{"app", "ops-b", "ops-a"},
+		denied: map[string]bool{"ops-a": true, "ops-b": true},
+	}
+
+	resources, warnings, err := fetchWithLog(t, NewConfig(&AWSAPI{Kms: api}), BuildKmsFetchFuncs, "kmskey")
+	if err != nil {
+		t.Fatalf("a key whose description was denied failed the whole fetch: %v", err)
+	}
+
+	want := []string{"app", "ops-a", "ops-b"}
+	if got := sortedIds(resources); fmt.Sprint(got) != fmt.Sprint(want) {
+		t.Fatalf("got %v, want %v", got, want)
+	}
+	if len(warnings) != 1 {
+		t.Fatalf("got %d warnings %q, want exactly one for the whole fetch", len(warnings), warnings)
+	}
+	if !strings.Contains(warnings[0], "DescribeKey") || !strings.Contains(warnings[0], "ops-a, ops-b") {
+		t.Errorf("warning %q should name the call and the denied keys, sorted", warnings[0])
+	}
+}
+
+// The warning appears only when something was denied.
+func TestNoWarningWhenNothingIsDenied(t *testing.T) {
+	_, warnings, err := fetchWithLog(t, NewConfig(&AWSAPI{Kms: perItemKms{ids: []string{"a", "b"}}}), BuildKmsFetchFuncs, "kmskey")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(warnings) != 0 {
+		t.Errorf("got warnings %q, want none", warnings)
 	}
 }
