@@ -602,6 +602,7 @@ func addManualAccessFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 		// stop on a hasError flag that the per-user goroutines wrote and the paging
 		// loop read without synchronisation.
 		var mu sync.Mutex
+		var denied deniedItems
 		err := forEachParallel(ctx, users, func(ctx context.Context, u iamtypes.User) error {
 			userRes, err := awsconv.InitResource(u)
 			if err != nil {
@@ -610,6 +611,12 @@ func addManualAccessFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 			keys := iam.NewListAccessKeysPaginator(conf.APIs.Iam, &iam.ListAccessKeysInput{UserName: u.UserName})
 			for keys.HasMorePages() {
 				out, err := keys.NextPage(ctx)
+				// A policy scoped to some users can deny ListAccessKeys on the rest
+				// to a role that may list them all; those users show no keys.
+				if IsAccessDenied(err) {
+					denied.add(awssdk.ToString(u.UserName))
+					return nil
+				}
 				if err != nil {
 					return err
 				}
@@ -627,6 +634,7 @@ func addManualAccessFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 			}
 			return nil
 		})
+		denied.warn(conf.Log, err, "iam", "ListAccessKeys", "user", "whose keys are left out")
 		return resources, objects, err
 	}
 }
@@ -716,6 +724,7 @@ func addManualMessagingFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 		}
 
 		var mu sync.Mutex
+		var denied deniedItems
 		err := forEachParallel(ctx, queueUrls, func(ctx context.Context, url string) error {
 			res := graph.InitResource(cloud.Queue, url)
 			res.Properties()[properties.ID] = url
@@ -730,6 +739,17 @@ func addManualMessagingFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 			if errors.As(err, &notExist) || errors.As(err, &deleted) {
 				mu.Lock()
 				objects = append(objects, url)
+				mu.Unlock()
+				return nil
+			}
+			// A policy scoped to some queues can deny GetQueueAttributes on the
+			// rest to a role that may list them all; those queues keep the URL
+			// ListQueues returned.
+			if IsAccessDenied(err) {
+				denied.add(url)
+				mu.Lock()
+				objects = append(objects, url)
+				resources = append(resources, res)
 				mu.Unlock()
 				return nil
 			}
@@ -776,6 +796,7 @@ func addManualMessagingFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 			mu.Unlock()
 			return nil
 		})
+		denied.warn(conf.Log, err, "sqs", "GetQueueAttributes", "queue", "listed by URL only")
 		return resources, objects, err
 	}
 }
@@ -892,12 +913,20 @@ func addManualDynamodbFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 		}
 
 		var mu sync.Mutex
+		var denied deniedItems
 		err := forEachParallel(ctx, names, func(ctx context.Context, name string) error {
 			out, err := conf.APIs.Dynamodb.DescribeTable(ctx, &dynamodb.DescribeTableInput{TableName: awssdk.String(name)})
 			// A table can be deleted between listing and describing it; that is
 			// not a sync failure.
 			var notFound *dynamodbtypes.ResourceNotFoundException
 			if errors.As(err, &notFound) {
+				return nil
+			}
+			// A policy scoped to some tables can deny DescribeTable on the rest to
+			// a role that may list them all. ListTables returns names only and a
+			// table is identified by its ARN, so a denied table is left out.
+			if IsAccessDenied(err) {
+				denied.add(name)
 				return nil
 			}
 			if err != nil {
@@ -916,6 +945,7 @@ func addManualDynamodbFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 			mu.Unlock()
 			return nil
 		})
+		denied.warn(conf.Log, err, "dynamodb", "DescribeTable", "table", "left out")
 		return resources, objects, err
 	}
 }
@@ -1050,6 +1080,7 @@ func addManualKmsFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 
 		// ListKeys returns ids only: one DescribeKey per key.
 		var mu sync.Mutex
+		var denied deniedItems
 		err := forEachParallel(ctx, keys, func(ctx context.Context, k kmstypes.KeyListEntry) error {
 			out, err := conf.APIs.Kms.DescribeKey(ctx, &kms.DescribeKeyInput{KeyId: k.KeyId})
 			var meta kmstypes.KeyMetadata
@@ -1062,6 +1093,7 @@ func addManualKmsFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 			case errors.As(err, &notFound):
 				return nil
 			case IsAccessDenied(err):
+				denied.add(awssdk.ToString(k.KeyId))
 				meta = kmstypes.KeyMetadata{KeyId: k.KeyId, Arn: k.KeyArn}
 			case err != nil:
 				return err
@@ -1083,6 +1115,7 @@ func addManualKmsFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 			mu.Unlock()
 			return nil
 		})
+		denied.warn(conf.Log, err, "kms", "DescribeKey", "key", "listed with id, ARN and alias only")
 		return resources, objects, err
 	}
 }
