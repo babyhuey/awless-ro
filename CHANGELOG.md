@@ -2,10 +2,16 @@
 
 ## Unreleased
 
+### Changed
+
+- `list kmskeys` warns once, naming the keys whose `DescribeKey` was denied. (#92)
+
 ### Fixed
 
 - `list queues` and `list tables` no longer fail the whole service when a per-item call is denied.
-  Denied queues are listed by URL and denied tables are left out, with one warning. (#87)
+  Denied queues are listed by URL and denied tables are left out, with one warning naming them. (#87)
+- `list accesskeys` and `sync` no longer fail when `ListAccessKeys` is denied for some users.
+  Their keys are left out, with one warning naming them. (#92)
 
 ## v0.6.0
 
