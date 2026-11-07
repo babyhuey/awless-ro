@@ -634,7 +634,7 @@ func addManualAccessFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 			}
 			return nil
 		})
-		denied.warn(conf.Log, "iam", "ListAccessKeys", "user", "whose keys are left out")
+		denied.warn(conf.Log, err, "iam", "ListAccessKeys", "user", "whose keys are left out")
 		return resources, objects, err
 	}
 }
@@ -796,7 +796,7 @@ func addManualMessagingFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 			mu.Unlock()
 			return nil
 		})
-		denied.warn(conf.Log, "sqs", "GetQueueAttributes", "queue", "listed by URL only")
+		denied.warn(conf.Log, err, "sqs", "GetQueueAttributes", "queue", "listed by URL only")
 		return resources, objects, err
 	}
 }
@@ -945,7 +945,7 @@ func addManualDynamodbFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 			mu.Unlock()
 			return nil
 		})
-		denied.warn(conf.Log, "dynamodb", "DescribeTable", "table", "left out")
+		denied.warn(conf.Log, err, "dynamodb", "DescribeTable", "table", "left out")
 		return resources, objects, err
 	}
 }
@@ -1115,7 +1115,7 @@ func addManualKmsFetchFuncs(conf *Config, funcs map[string]fetch.Func) {
 			mu.Unlock()
 			return nil
 		})
-		denied.warn(conf.Log, "kms", "DescribeKey", "key", "listed with id, ARN and alias only")
+		denied.warn(conf.Log, err, "kms", "DescribeKey", "key", "listed with id, ARN and alias only")
 		return resources, objects, err
 	}
 }

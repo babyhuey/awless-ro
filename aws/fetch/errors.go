@@ -18,6 +18,7 @@ package awsfetch
 
 import (
 	"errors"
+	"fmt"
 	"sort"
 	"strings"
 	"sync"
@@ -66,14 +67,25 @@ func (d *deniedItems) add(name string) {
 	d.mu.Unlock()
 }
 
-// warn logs, if anything was denied, one line in the form
-// "<service>: <call> was denied for <n> <kind>(s), <outcome>: <names>".
-func (d *deniedItems) warn(log *logger.Logger, service, call, kind, outcome string) {
+// maxDeniedNames caps the names one warning lists: a policy scoped to one team can
+// deny a call for hundreds of items, and an SQS name is a whole URL.
+const maxDeniedNames = 10
+
+// warn logs, if the fetch succeeded and anything was denied, one line in the form
+// "<service>: <call> was denied for <n> <kind>(s), <outcome>: <names>", naming the
+// first maxDeniedNames items, sorted, and how many more there are. fetchErr is the
+// error the fetch returns: when it failed, that error is what gets reported, and the
+// outcome the warning states would not be true.
+func (d *deniedItems) warn(log *logger.Logger, fetchErr error, service, call, kind, outcome string) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	if len(d.names) == 0 {
+	if fetchErr != nil || len(d.names) == 0 {
 		return
 	}
 	sort.Strings(d.names)
-	log.Warningf("%s: %s was denied for %d %s(s), %s: %s", service, call, len(d.names), kind, outcome, strings.Join(d.names, ", "))
+	names := strings.Join(d.names, ", ")
+	if more := len(d.names) - maxDeniedNames; more > 0 {
+		names = fmt.Sprintf("%s, and %d more", strings.Join(d.names[:maxDeniedNames], ", "), more)
+	}
+	log.Warningf("%s: %s was denied for %d %s(s), %s: %s", service, call, len(d.names), kind, outcome, names)
 }

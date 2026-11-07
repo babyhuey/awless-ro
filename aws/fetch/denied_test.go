@@ -334,3 +334,46 @@ func TestNoWarningWhenNothingIsDenied(t *testing.T) {
 		t.Errorf("got warnings %q, want none", warnings)
 	}
 }
+
+// A policy scoped to one team can deny hundreds of users. The warning keeps the full
+// count but names only the first ten, sorted, and says how many more there are.
+func TestDeniedWarningNamesAtMostTen(t *testing.T) {
+	api := perItemIam{names: []string{"app"}, denied: map[string]bool{}}
+	for i := 12; i >= 1; i-- {
+		name := fmt.Sprintf("u%02d", i)
+		api.names = append(api.names, name)
+		api.denied[name] = true
+	}
+
+	_, warnings, err := fetchWithLog(t, NewConfig(&AWSAPI{Iam: api}), BuildAccessFetchFuncs, "accesskey")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(warnings) != 1 {
+		t.Fatalf("got %d warnings %q, want exactly one", len(warnings), warnings)
+	}
+	want := "12 user(s), whose keys are left out: u01, u02, u03, u04, u05, u06, u07, u08, u09, u10, and 2 more"
+	if !strings.HasSuffix(warnings[0], want) {
+		t.Errorf("warning %q should end with %q", warnings[0], want)
+	}
+}
+
+// When the fetch fails for another reason its error is what gets reported: a
+// warning listing the denied items, with an outcome that did not happen, would
+// only add noise.
+func TestNoDeniedWarningWhenTheFetchFails(t *testing.T) {
+	// Users start in order, so the denied one is always called before the fetch fails.
+	api := perItemIam{
+		names:  []string{"a-denied", "b-broken"},
+		denied: map[string]bool{"a-denied": true},
+		broken: map[string]bool{"b-broken": true},
+	}
+
+	_, warnings, err := fetchWithLog(t, NewConfig(&AWSAPI{Iam: api}), BuildAccessFetchFuncs, "accesskey")
+	if err == nil {
+		t.Fatal("an error that is not access denied was swallowed")
+	}
+	if len(warnings) != 0 {
+		t.Errorf("got warnings %q, want none when the fetch fails", warnings)
+	}
+}
