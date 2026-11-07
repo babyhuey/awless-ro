@@ -2,8 +2,16 @@
 
 ## Unreleased
 
+### Changed
+
+- `list kmskeys` warns once, naming the keys whose `DescribeKey` was denied. (#92)
+
 ### Fixed
 
+- `list queues` and `list tables` no longer fail the whole service when a per-item call is denied.
+  Denied queues are listed by URL and denied tables are left out, with one warning naming them. (#87)
+- `list accesskeys` and `sync` no longer fail when `ListAccessKeys` is denied for some users.
+  Their keys are left out, with one warning naming them. (#92)
 - `show` says when a missing resource may be absent because its service's `aws.<service>.sync`
   is off, and how to turn it on. (#89)
 

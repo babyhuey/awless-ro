@@ -18,8 +18,13 @@ package awsfetch
 
 import (
 	"errors"
+	"fmt"
+	"sort"
+	"strings"
+	"sync"
 
 	"github.com/aws/smithy-go"
+	"github.com/theazz/awless-ro/logger"
 )
 
 // accessDeniedCodes are the error codes AWS services return when the caller's
@@ -46,4 +51,41 @@ func IsAccessDenied(err error) bool {
 		return accessDeniedCodes[apiErr.ErrorCode()]
 	}
 	return false
+}
+
+// deniedItems collects the items a per-item call was denied for during one fetch,
+// so the fetch logs a single warning instead of one per item. Whether a denied
+// item is kept or left out stays up to each fetcher. It is safe for concurrent use.
+type deniedItems struct {
+	mu    sync.Mutex
+	names []string
+}
+
+func (d *deniedItems) add(name string) {
+	d.mu.Lock()
+	d.names = append(d.names, name)
+	d.mu.Unlock()
+}
+
+// maxDeniedNames caps the names one warning lists: a policy scoped to one team can
+// deny a call for hundreds of items, and an SQS name is a whole URL.
+const maxDeniedNames = 10
+
+// warn logs, if the fetch succeeded and anything was denied, one line in the form
+// "<service>: <call> was denied for <n> <kind>(s), <outcome>: <names>", naming the
+// first maxDeniedNames items, sorted, and how many more there are. fetchErr is the
+// error the fetch returns: when it failed, that error is what gets reported, and the
+// outcome the warning states would not be true.
+func (d *deniedItems) warn(log *logger.Logger, fetchErr error, service, call, kind, outcome string) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	if fetchErr != nil || len(d.names) == 0 {
+		return
+	}
+	sort.Strings(d.names)
+	names := strings.Join(d.names, ", ")
+	if more := len(d.names) - maxDeniedNames; more > 0 {
+		names = fmt.Sprintf("%s, and %d more", strings.Join(d.names[:maxDeniedNames], ", "), more)
+	}
+	log.Warningf("%s: %s was denied for %d %s(s), %s: %s", service, call, len(d.names), kind, outcome, names)
 }
