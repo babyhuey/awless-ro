@@ -1016,8 +1016,10 @@ func TestNoHeadersDisplay(t *testing.T) {
 func TestFilterOnPropertyThatIsNotAColumn(t *testing.T) {
 	g := graph.NewGraph()
 	g.AddResource(
-		resourcetest.Instance("inst_1").Prop(p.Lifecycle, "spot").Prop(p.Architecture, "x86_64").Build(),
-		resourcetest.Instance("inst_2").Prop(p.Lifecycle, "scheduled").Prop(p.Architecture, "x86_64_mac").Build(),
+		resourcetest.Instance("inst_1").Prop(p.Lifecycle, "spot").Prop(p.Architecture, "x86_64").
+			Prop(p.AvailabilityZone, "eu-west-1a").Prop(p.Launched, time.Date(2017, 1, 10, 16, 47, 18, 0, time.UTC)).Build(),
+		resourcetest.Instance("inst_2").Prop(p.Lifecycle, "scheduled").Prop(p.Architecture, "x86_64_mac").
+			Prop(p.AvailabilityZone, "eu-west-1b").Prop(p.Launched, time.Date(2020, 3, 1, 9, 0, 0, 0, time.UTC)).Build(),
 		resourcetest.Instance("inst_3").Prop(p.Name, "on-demand").Prop(p.Architecture, "arm64").Build(),
 	)
 
@@ -1060,6 +1062,12 @@ func TestFilterOnPropertyThatIsNotAColumn(t *testing.T) {
 		{name: "displayed column, exact", filter: "name==on-demand", want: []string{"inst_3"}},
 		{name: "property requested with --columns gives the same result", columns: []string{"id", "lifecycle"}, filter: "lifecycle=spot", want: []string{"inst_1"}},
 		{name: "property requested with --columns, exact", columns: []string{"id", "architecture"}, filter: "architecture==x86_64", want: []string{"inst_1"}},
+		// A column title names the type's property whether or not the column is
+		// printed: zone is AvailabilityZone, not the global Zone property.
+		{name: "column title, default columns", filter: "zone=eu-west-1a", want: []string{"inst_1"}},
+		{name: "column title with only the id printed", columns: []string{"id"}, filter: "zone=eu-west-1a", want: []string{"inst_1"}},
+		{name: "column title of a time column, default columns", filter: "uptime=2017", want: []string{"inst_1"}},
+		{name: "column title of a time column with only the id printed", columns: []string{"id"}, filter: "uptime=2017", want: []string{"inst_1"}},
 	}
 	for _, tcase := range tcases {
 		t.Run(tcase.name, func(t *testing.T) {

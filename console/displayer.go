@@ -76,9 +76,13 @@ func (b *Builder) buildQuery() (cloud.Query, error) {
 		if parsed, ok := match.ParseFilter(f); ok {
 			name, val := strings.TrimSpace(strings.Title(parsed.Key)), strings.TrimSpace(parsed.Value)
 			key := ColumnDefinitions(b.columnDefinitions).resolveKey(name)
+			// Not a printed column: resolve it as --columns does, the type's column
+			// definitions first and then any known property, so the two flags accept
+			// the same names whichever columns are printed.
 			if key == "" {
-				// Not a printed column: resolve it as --columns does, so the two
-				// flags accept the same names.
+				key = ColumnDefinitions(DefaultsColumnDefinitions[b.rdfType]).resolveKey(name)
+			}
+			if key == "" {
 				prop := canonicalPropertyName(name)
 				if _, known := rdf.Labels[prop]; known {
 					key = prop
