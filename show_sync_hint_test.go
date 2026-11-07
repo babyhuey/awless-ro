@@ -12,6 +12,13 @@ const (
 	secretARN = "arn:aws:secretsmanager:eu-west-1:123456789012:secret:prod/db-AbCdEf"
 	ssmARN    = "arn:aws:ssm:eu-west-1:123456789012:parameter/prod/db"
 	logARN    = "arn:aws:logs:eu-west-1:123456789012:log-group:/prod/app:*"
+	albARN    = "arn:aws:elasticloadbalancing:eu-west-1:123456789012:loadbalancer/app/web/abc"
+
+	otherRegionInfraNT = "<us-east-1> <cloud:id> \"us-east-1\" .\n" +
+		"<us-east-1> <rdf:type> <cloud-owl:Region> .\n" +
+		"<us-east-1> <cloud-rel:parentOf> <i-2> .\n" +
+		"<i-2> <cloud:id> \"i-2\" .\n" +
+		"<i-2> <rdf:type> <cloud-owl:Instance> .\n"
 )
 
 func showHome(t *testing.T, bin string, syncOn ...string) string {
@@ -111,6 +118,38 @@ func TestShowMissHintsAtSyncOff(t *testing.T) {
 		}
 		if strings.Contains(stderr, ".sync") || strings.Contains(stderr, "config set") {
 			t.Errorf("no hint expected, got:\n%s", stderr)
+		}
+	})
+
+	t.Run("an ARN of a service with no sync key mapped has no hint", func(t *testing.T) {
+		// Default config: kms, monitoring, secretsmanager and ssm are off, and none of
+		// them explains a missing load balancer.
+		home := showHome(t, bin)
+
+		_, stderr, exit := runLocal(t, bin, home, "show", albARN, "--local")
+		if exit != 1 {
+			t.Errorf("exit = %d, want 1", exit)
+		}
+		if !strings.Contains(stderr, "not found") {
+			t.Errorf("the not-found message should stay, got:\n%s", stderr)
+		}
+		if strings.Contains(stderr, ".sync") || strings.Contains(stderr, "config set") {
+			t.Errorf("no hint expected for an unmapped ARN service, got:\n%s", stderr)
+		}
+	})
+
+	t.Run("a resource synced under another region has no hint", func(t *testing.T) {
+		home := graphHome(t, map[string]string{"us-east-1/infra": otherRegionInfraNT})
+
+		_, stderr, exit := runLocal(t, bin, home, "show", "i-2", "--local")
+		if exit != 1 {
+			t.Errorf("exit = %d, want 1", exit)
+		}
+		if !strings.Contains(stderr, "found previously synced under region 'us-east-1'") {
+			t.Fatalf("want the other-region message, got:\n%s", stderr)
+		}
+		if strings.Contains(stderr, ".sync") || strings.Contains(stderr, "config set") {
+			t.Errorf("the region explains the miss, no sync hint expected, got:\n%s", stderr)
 		}
 	})
 

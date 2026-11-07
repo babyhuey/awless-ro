@@ -382,8 +382,11 @@ func decorateWithSuggestion(err error, ref string) error {
 		}
 
 	}
-	if hint := syncOffHint(ref); hint != "" {
-		buf.WriteString("\n\t" + hint)
+	// Found under another region: the region explains the miss, not sync.
+	if len(seen) == 0 {
+		if hint := syncOffHint(ref); hint != "" {
+			buf.WriteString("\n\t" + hint)
+		}
 	}
 	return errors.New(buf.String())
 }
@@ -391,9 +394,15 @@ func decorateWithSuggestion(err error, ref string) error {
 // syncOffHint explains a miss that sync being off could cause: `list` fetches with
 // force and finds resources that `show`, which reads only the local graph, never
 // sees. An ARN names its service, which narrows the answer; any other reference
-// could belong to any service, so every service that is off is named.
+// could belong to any service, so every service that is off is named. An ARN of a
+// service serviceOfARN does not know gets no hint: the keys that are off say
+// nothing about it.
 func syncOffHint(ref string) string {
-	if service, ok := serviceOfARN(ref); ok {
+	if strings.HasPrefix(ref, "arn:") {
+		service, ok := serviceOfARN(ref)
+		if !ok {
+			return ""
+		}
 		key, off := syncDisabledFor(service, "")
 		if !off {
 			return ""
